@@ -1,0 +1,15 @@
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from apps.core.api import TenantRequiredMixin
+from apps.tenancy.permissions import IsTenantMember
+from apps.core.audit_mixins import AuditCrudMixin
+from .models import Warehouse
+from .serializers import WarehouseSerializer
+
+class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = WarehouseSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get_queryset(self):
+        # Se evalúa ya dentro del request, con tenant en el contexto ✅
+        return Warehouse.objects.all()
