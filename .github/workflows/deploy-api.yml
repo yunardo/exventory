@@ -1,4 +1,4 @@
-name: Deploy API to EC2
+name: Deploy API to ECS
 
 on:
   push:
@@ -34,45 +34,9 @@ jobs:
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
 
-      - name: Deploy on EC2 via SSM
+      - name: Deploy to ECS
         run: |
-          COMMAND_ID=$(aws ssm send-command \
-            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Deploy saas-api from GitHub Actions" \
-            --parameters 'commands=[
-              "set -e",
-              "REGION=${{ secrets.AWS_REGION }}",
-              "ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}",
-              "REPO=${{ secrets.ECR_REPOSITORY }}",
-              "IMAGE_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}:latest",
-              "aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com",
-              "docker pull $IMAGE_URI",
-              "docker rm -f saas_api || true",
-              "docker run -d --name saas_api \
-                --restart unless-stopped \
-                --env-file /opt/saas/app.env \
-                -p 8000:8000 \
-                --log-driver=awslogs \
-                --log-opt awslogs-region=$REGION \
-                --log-opt awslogs-group=/exventory/prod/api \
-                --log-opt awslogs-stream=saas-api-ec2 \
-                $IMAGE_URI",
-              "sleep 8",
-              "docker exec saas_api python manage.py migrate --noinput",
-              "docker exec saas_api python manage.py collectstatic --noinput",
-              "docker restart saas_api"
-            ]' \
-            --query "Command.CommandId" \
-            --output text)
-
-          echo "Command ID: $COMMAND_ID"
-
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ secrets.EC2_INSTANCE_ID }}"
-
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
-            --query '{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}'
+          aws ecs update-service \
+            --cluster exventory-prod-cluster \
+            --service saas-api-service \
+            --force-new-deployment
