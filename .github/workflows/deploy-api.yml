@@ -38,5 +38,5 @@ jobs:
         run: |
           aws ecs update-service \
             --cluster exventory-prod-cluster \
-            --service saas-api-service \
+            --service saas-api-service-9dxkhprv \
             --force-new-deployment
