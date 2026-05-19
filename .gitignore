@@ -21,3 +21,10 @@ frontend/.env.local
 *.log
 .vscode/
 .idea/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
