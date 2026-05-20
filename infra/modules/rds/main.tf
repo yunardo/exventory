@@ -1,19 +1,16 @@
 resource "aws_db_subnet_group" "main" {
-  name        = "saas-db-subnet-group"
+  name        = var.db_subnet_group_name
   description = "Subnet group for SaaS RDS"
 
-  subnet_ids = [
-    aws_subnet.private_db_a.id,
-    aws_subnet.private_db_b.id
-  ]
+  subnet_ids = var.db_subnet_ids
 
   tags = {
-    Name = "saas-db-subnet-group"
+    Name = var.db_subnet_group_name
   }
 }
 
 resource "aws_db_instance" "postgres" {
-  identifier = "saas-postgres-prod-1"
+  identifier = var.db_identifier
 
   engine         = "postgres"
   instance_class = "db.m7g.large"
@@ -23,21 +20,21 @@ resource "aws_db_instance" "postgres" {
 
   username = "saas_admin"
 
-  storage_encrypted    = true
-  multi_az             = true
+  storage_encrypted     = true
+  multi_az              = true
   copy_tags_to_snapshot = true
   skip_final_snapshot   = true
 
   db_subnet_group_name = "default-vpc-012cf15e79e99c982"
 
   vpc_security_group_ids = [
-    aws_security_group.rds.id
+    var.rds_security_group_id
   ]
 
   publicly_accessible = false
 
   tags = {
-    Name = "saas-postgres-prod-1"
+    Name = var.db_identifier
   }
 
   lifecycle {

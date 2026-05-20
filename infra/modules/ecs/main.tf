@@ -1,5 +1,5 @@
 resource "aws_ecs_cluster" "main" {
-  name = "exventory-prod-cluster"
+  name = var.cluster_name
 
   configuration {
     execute_command_configuration {
@@ -8,7 +8,7 @@ resource "aws_ecs_cluster" "main" {
   }
 
   tags = {
-    Name = "exventory-prod-cluster"
+    Name = var.cluster_name
   }
 }
 
@@ -19,13 +19,13 @@ resource "aws_ecs_task_definition" "api" {
   cpu                      = "512"
   memory                   = "1024"
 
-  execution_role_arn = "arn:aws:iam::316777659644:role/ecsTaskExecutionRole"
-  task_role_arn      = "arn:aws:iam::316777659644:role/ecsSaasApiTaskRole"
+  execution_role_arn = var.execution_role_arn
+  task_role_arn      = var.task_role_arn
 
   container_definitions = jsonencode([
     {
       name      = "saas_api"
-      image     = "316777659644.dkr.ecr.us-east-1.amazonaws.com/saas-api:latest"
+      image     = var.image_uri
       essential = true
 
       portMappings = [
@@ -49,43 +49,43 @@ resource "aws_ecs_task_definition" "api" {
       secrets = [
         {
           name      = "DJANGO_SECRET_KEY"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/DJANGO_SECRET_KEY"
+          valueFrom = "${var.ssm_parameter_prefix}/DJANGO_SECRET_KEY"
         },
         {
           name      = "DJANGO_ALLOWED_HOSTS"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/DJANGO_ALLOWED_HOSTS"
+          valueFrom = "${var.ssm_parameter_prefix}/DJANGO_ALLOWED_HOSTS"
         },
         {
           name      = "DJANGO_CSRF_TRUSTED_ORIGINS"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/DJANGO_CSRF_TRUSTED_ORIGINS"
+          valueFrom = "${var.ssm_parameter_prefix}/DJANGO_CSRF_TRUSTED_ORIGINS"
         },
         {
           name      = "POSTGRES_DB"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/POSTGRES_DB"
+          valueFrom = "${var.ssm_parameter_prefix}/POSTGRES_DB"
         },
         {
           name      = "POSTGRES_USER"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/POSTGRES_USER"
+          valueFrom = "${var.ssm_parameter_prefix}/POSTGRES_USER"
         },
         {
           name      = "POSTGRES_PASSWORD"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/POSTGRES_PASSWORD"
+          valueFrom = "${var.ssm_parameter_prefix}/POSTGRES_PASSWORD"
         },
         {
           name      = "POSTGRES_HOST"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/POSTGRES_HOST"
+          valueFrom = "${var.ssm_parameter_prefix}/POSTGRES_HOST"
         },
         {
           name      = "POSTGRES_PORT"
-          valueFrom = "arn:aws:ssm:us-east-1:316777659644:parameter/saas/prod/POSTGRES_PORT"
+          valueFrom = "${var.ssm_parameter_prefix}/POSTGRES_PORT"
         }
       ]
 
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/exventory/prod/api"
-          awslogs-region        = "us-east-1"
+          awslogs-group         = var.log_group_name
+          awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
         }
       }
@@ -94,14 +94,14 @@ resource "aws_ecs_task_definition" "api" {
 }
 
 resource "aws_ecs_service" "api" {
-  name            = "saas-api-service-9dxkhprv"
+  name            = var.service_name
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.api.arn
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  enable_execute_command       = false
-  enable_ecs_managed_tags      = true
+  enable_execute_command        = false
+  enable_ecs_managed_tags       = true
   availability_zone_rebalancing = "ENABLED"
 
   deployment_circuit_breaker {
@@ -110,20 +110,13 @@ resource "aws_ecs_service" "api" {
   }
 
   network_configuration {
-    subnets = [
-      aws_subnet.private_app_a.id,
-      aws_subnet.private_app_b.id
-    ]
-
-    security_groups = [
-      aws_security_group.ecs.id
-    ]
-
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.ecs_api.arn
+    target_group_arn = var.target_group_arn
     container_name   = "saas_api"
     container_port   = 8000
   }

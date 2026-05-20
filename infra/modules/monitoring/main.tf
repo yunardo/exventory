@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_log_group" "api" {
-  name              = "/exventory/prod/api"
-  retention_in_days = 7
+  name              = var.log_group_name
+  retention_in_days = var.log_retention_days
 
   tags = {
     Name = "exventory-prod-api-logs"
@@ -19,8 +19,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_targets" {
   metric_name         = "UnHealthyHostCount"
 
   dimensions = {
-    TargetGroup      = aws_lb_target_group.ecs_api.arn_suffix
-    LoadBalancer     = aws_lb.main.arn_suffix
+    TargetGroup      = var.target_group_arn_suffix
+    LoadBalancer     = var.alb_arn_suffix
     AvailabilityZone = "us-east-1a"
   }
 
@@ -43,7 +43,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors" {
   metric_name         = "HTTPCode_ELB_5XX_Count"
 
   dimensions = {
-    LoadBalancer = aws_lb.main.arn_suffix
+    LoadBalancer = var.alb_arn_suffix
   }
 
   alarm_actions = [
@@ -65,7 +65,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_high_cpu" {
   metric_name         = "CPUUtilization"
 
   dimensions = {
-    DBInstanceIdentifier = "saas-postgres-prod-1"
+    DBInstanceIdentifier = var.db_instance_identifier
   }
 
   alarm_actions = [
@@ -87,13 +87,11 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_high_cpu" {
   metric_name         = "CPUUtilization"
 
   dimensions = {
-    ClusterName = "exventory-prod-cluster"
-    ServiceName = "saas-api-service-9dxkhprv"
+    ClusterName = var.ecs_cluster_name
+    ServiceName = var.ecs_service_name
   }
 
-  alarm_actions = [
-    "arn:aws:sns:us-east-1:316777659644:exventory-prod-alerts"
-  ]
+  alarm_actions = [var.sns_topic_arn]
 
   treat_missing_data = "missing"
 }
@@ -110,13 +108,11 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_high_memory" {
   metric_name         = "MemoryUtilization"
 
   dimensions = {
-    ClusterName = "exventory-prod-cluster"
-    ServiceName = "saas-api-service-9dxkhprv"
+    ClusterName = var.ecs_cluster_name
+    ServiceName = var.ecs_service_name
   }
 
-  alarm_actions = [
-    "arn:aws:sns:us-east-1:316777659644:exventory-prod-alerts"
-  ]
+  alarm_actions = [var.sns_topic_arn]
 
   treat_missing_data = "missing"
 }

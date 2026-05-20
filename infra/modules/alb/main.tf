@@ -2,12 +2,12 @@ resource "aws_lb" "main" {
   name               = "alb-saas-app"
   load_balancer_type = "application"
   internal           = false
-  security_groups    = [aws_security_group.alb.id]
 
-  subnets = [
-    aws_subnet.public_a.id,
-    aws_subnet.public_b.id
+  security_groups = [
+    var.alb_security_group_id
   ]
+
+  subnets = var.public_subnet_ids
 
   tags = {
     Name = "alb-saas-app"
@@ -19,7 +19,7 @@ resource "aws_lb_target_group" "ecs_api" {
   port                               = 8000
   protocol                           = "HTTP"
   target_type                        = "ip"
-  vpc_id                             = aws_vpc.main.id
+  vpc_id                             = var.vpc_id
   lambda_multi_value_headers_enabled = false
   proxy_protocol_v2                  = false
 
@@ -44,10 +44,10 @@ resource "aws_lb_listener" "https" {
   protocol          = "HTTPS"
 
   ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn = aws_acm_certificate.main.arn
+  certificate_arn = var.certificate_arn
 
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.ecs_api.arn
 
     forward {
