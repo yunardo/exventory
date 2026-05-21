@@ -148,3 +148,11 @@ LOGGING = {
 CSRF_TRUSTED_ORIGINS = [
     h.strip() for h in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if h.strip()
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("DJANGO_CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+CORS_ALLOW_CREDENTIALS = True

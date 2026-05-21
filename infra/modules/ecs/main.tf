@@ -79,6 +79,10 @@ resource "aws_ecs_task_definition" "api" {
           name      = "POSTGRES_PORT"
           valueFrom = "${var.ssm_parameter_prefix}/POSTGRES_PORT"
         }
+        {
+          name      = "DJANGO_CORS_ALLOWED_ORIGINS"
+          valueFrom = "${var.ssm_parameter_prefix}/DJANGO_CORS_ALLOWED_ORIGINS"
+        }
       ]
 
       logConfiguration = {
