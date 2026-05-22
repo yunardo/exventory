@@ -23,6 +23,7 @@ from apps.inventory.views import WarehouseViewSet
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView
+from apps.tenancy.views import AuthTenantsView
 
 def health_check(request):
     return JsonResponse({"status": "ok"})
@@ -50,6 +51,7 @@ urlpatterns = [
     path("api/my-tenants/", MyTenantsView.as_view(), name="my_tenants"),
 
     path("api/auth/me/", AuthMeView.as_view(), name="auth-me"),
+    path("api/auth/tenants/", AuthTenantsView.as_view(), name="auth-tenants"),
 
     path("api/", include(router.urls)),
 ]

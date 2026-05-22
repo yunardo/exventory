@@ -18,8 +18,11 @@ class ResolveTenantFromSubdomainMiddleware(MiddlewareMixin):
         global_paths = (
             "/health/",
             "/admin/",
+            "/static/",
             "/api/auth/login/",
             "/api/auth/refresh/",
+            "/api/auth/me/",
+            "/api/auth/tenants/",
         )
 
         if any(request.path.startswith(path) for path in global_paths):
