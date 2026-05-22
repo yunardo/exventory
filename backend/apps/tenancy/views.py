@@ -3,8 +3,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 
-from apps.tenancy.models import TenantMembership
-
 from .models import Membership
 from .serializers import MyTenantSerializer
 
@@ -13,7 +11,7 @@ class AuthTenantsView(APIView):
 
     def get(self, request):
         memberships = (
-            TenantMembership.objects
+            Membership.objects
             .select_related("tenant")
             .filter(user=request.user, tenant__is_active=True)
         )
