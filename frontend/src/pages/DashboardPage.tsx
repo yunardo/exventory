@@ -17,10 +17,7 @@ export function DashboardPage() {
       navigate("/login", { replace: true });
     });
     getTenantMe()
-      .then((response) => {
-        console.log({response});
-        setTenantUser(response.user);
-      })
+      .then(setTenantUser)
       .catch(() => setTenantError("Could not load tenant context."));
   }, [navigate]);
 
