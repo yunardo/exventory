@@ -22,7 +22,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.inventory.views import WarehouseViewSet
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
-from apps.core.views import AuditLogViewSet
+from apps.core.views import AuditLogViewSet, AuthMeView
 
 def health_check(request):
     return JsonResponse({"status": "ok"})
@@ -48,6 +48,8 @@ urlpatterns = [
 
     path("api/me/", MeView.as_view(), name="me"),
     path("api/my-tenants/", MyTenantsView.as_view(), name="my_tenants"),
+
+    path("api/auth/me/", AuthMeView.as_view(), name="auth-me"),
 
     path("api/", include(router.urls)),
 ]
