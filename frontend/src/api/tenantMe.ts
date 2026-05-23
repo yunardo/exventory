@@ -1,9 +1,21 @@
 import { tenantApiClient } from "./tenantClient";
 
 export type TenantMeResponse = {
-  id: number;
-  username: string;
-  email: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+  };
+  tenant: {
+    id: number;
+    slug: string;
+    name: string;
+  };
+  membership: {
+    role: string;
+    is_active: boolean;
+  };
+  is_member: boolean;
 };
 
 export async function getTenantMe() {

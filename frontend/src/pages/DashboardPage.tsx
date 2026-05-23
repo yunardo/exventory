@@ -8,8 +8,8 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<MeResponse | null>(null);
   const tenantSlug = localStorage.getItem("tenant_slug");
-  const [tenantUser, setTenantUser] = useState<TenantMeResponse | null>(null);
   const [tenantError, setTenantError] = useState("");
+  const [tenantContext, setTenantContext] = useState<TenantMeResponse | null>(null);
 
   useEffect(() => {
     getMe().then(setUser).catch(() => {
@@ -17,27 +17,12 @@ export function DashboardPage() {
       navigate("/login", { replace: true });
     });
     getTenantMe()
-      .then(setTenantUser)
+      .then(setTenantContext)
       .catch(() => setTenantError("Could not load tenant context."));
   }, [navigate]);
 
-  function handleLogout() {
-    logout();
-    navigate("/login", { replace: true });
-  }
-
   return (
     <main className="min-h-screen bg-slate-100">
-      <header className="border-b bg-white px-8 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">Exventory</h1>
-
-        <button
-          onClick={handleLogout}
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-        >
-          Logout
-        </button>
-      </header>
 
       <section className="p-8">
         <h2 className="text-2xl font-bold text-slate-900">Dashboard</h2>
@@ -53,9 +38,11 @@ export function DashboardPage() {
           {tenantError ? (
             <p className="mt-2 text-red-600">{tenantError}</p>
           ) : (
-            <p className="mt-2 text-slate-600">
-              Tenant user: {tenantUser?.username ?? "loading..."}
-            </p>
+            <div className="mt-2 text-slate-600">
+              <p>Tenant: {tenantContext?.tenant.name ?? "loading..."}</p>
+              <p>User: {tenantContext?.user.username ?? "loading..."}</p>
+              <p>Role: {tenantContext?.membership.role ?? "loading..."}</p>
+            </div>
           )}
         </div>
       </section>
