@@ -34,7 +34,8 @@ const stockEntrySchema = z.object({
   notes: z.string().optional(),
 });
 
-type StockEntryFormValues = z.infer<typeof stockEntrySchema>;
+type StockEntryFormInput = z.input<typeof stockEntrySchema>;
+type StockEntryFormValues = z.output<typeof stockEntrySchema>;
 
 export function StockEntriesPage() {
   const queryClient = useQueryClient();
@@ -45,7 +46,7 @@ export function StockEntriesPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<StockEntryFormValues>({
+  } = useForm<StockEntryFormInput, unknown, StockEntryFormValues>({
     resolver: zodResolver(stockEntrySchema),
     defaultValues: {
       warehouse: 0,
