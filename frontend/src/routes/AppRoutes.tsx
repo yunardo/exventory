@@ -6,6 +6,7 @@ import { TenantsPage } from "../pages/TenantsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { WarehousesPage } from "../pages/WarehousesPage";
+import { ItemsPage } from "@/pages/ItemsPage";
 
 export function AppRoutes() {
   return (
@@ -20,6 +21,7 @@ export function AppRoutes() {
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/warehouses" element={<WarehousesPage />} />
+            <Route path="/items" element={<ItemsPage />} />
           </Route>
         </Route>
       </Routes>

@@ -7,6 +7,9 @@ from .models import Warehouse
 from .serializers import WarehouseSerializer
 from .models import Item
 from .serializers import ItemSerializer
+from .models import StockEntry
+from .serializers import StockEntrySerializer
+
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = WarehouseSerializer
@@ -23,3 +26,11 @@ class ItemViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
 
     def get_queryset(self):
         return Item.objects.all()
+
+
+class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = StockEntrySerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get_queryset(self):
+        return StockEntry.objects.select_related("warehouse", "item").all()

@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from apps.core.models import TenantAwareModel
 
 class Warehouse(TenantAwareModel):
@@ -24,3 +25,29 @@ class Item(TenantAwareModel):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+
+class StockEntry(TenantAwareModel):
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="stock_entries",
+    )
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+        related_name="stock_entries",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+
+    reference = models.CharField(max_length=120, blank=True)
+    entry_date = models.DateField()
+
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-entry_date", "-id"]
+
+    def __str__(self):
+        return f"{self.item} -> {self.warehouse} ({self.quantity})"
