@@ -1,51 +1,66 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getMe, type MeResponse } from "../api/me";
-import { logout } from "../api/auth";
-import { getTenantMe, type TenantMeResponse } from "../api/tenantMe";
+import { useQuery } from "@tanstack/react-query";
+import { getDashboardSummary } from "../api/dashboard";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function DashboardPage() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<MeResponse | null>(null);
   const tenantSlug = localStorage.getItem("tenant_slug");
-  const [tenantError, setTenantError] = useState("");
-  const [tenantContext, setTenantContext] = useState<TenantMeResponse | null>(null);
 
-  useEffect(() => {
-    getMe().then(setUser).catch(() => {
-      logout();
-      navigate("/login", { replace: true });
-    });
-    getTenantMe()
-      .then(setTenantContext)
-      .catch(() => setTenantError("Could not load tenant context."));
-  }, [navigate]);
+  const {
+    data: summary,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["dashboard-summary", tenantSlug],
+    queryFn: getDashboardSummary,
+  });
+
+  const cards = [
+    { title: "Warehouses", value: summary?.total_warehouses ?? 0 },
+    { title: "Items", value: summary?.total_items ?? 0 },
+    { title: "Stock Entries", value: summary?.total_stock_entries ?? 0 },
+    { title: "Stock Exits", value: summary?.total_stock_exits ?? 0 },
+    { title: "Current Quantity", value: summary?.current_quantity ?? "0.00" },
+  ];
 
   return (
-    <main className="min-h-screen bg-slate-100">
-
-      <section className="p-8">
-        <h2 className="text-2xl font-bold text-slate-900">Dashboard</h2>
-        <p className="mt-2 text-slate-600">
-          Welcome, {user?.username ?? "loading..."}.
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+        <p className="text-muted-foreground">
+          Overview of your current inventory workspace.
         </p>
-        <p className="mt-2 text-slate-600">
-          Current workspace: {tenantSlug ?? "none selected"}
-        </p>
-        <div className="mt-6 rounded-xl bg-white p-4 shadow">
-          <h3 className="font-semibold text-slate-900">Tenant context</h3>
+      </div>
 
-          {tenantError ? (
-            <p className="mt-2 text-red-600">{tenantError}</p>
-          ) : (
-            <div className="mt-2 text-slate-600">
-              <p>Tenant: {tenantContext?.tenant.name ?? "loading..."}</p>
-              <p>User: {tenantContext?.user.username ?? "loading..."}</p>
-              <p>Role: {tenantContext?.membership.role ?? "loading..."}</p>
-            </div>
-          )}
+      {isLoading && <p className="text-muted-foreground">Loading summary...</p>}
+
+      {isError && (
+        <p className="text-sm text-red-600">
+          Could not load dashboard summary.
+        </p>
+      )}
+
+      {!isLoading && !isError && (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {cards.map((card) => (
+            <Card key={card.title}>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {card.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{card.value}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </section>
-    </main>
+      )}
+    </section>
   );
 }

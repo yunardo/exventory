@@ -5,19 +5,14 @@ from rest_framework.response import Response
 from apps.core.api import TenantRequiredMixin
 from apps.tenancy.permissions import IsTenantMember
 from apps.core.audit_mixins import AuditCrudMixin
-from .models import Warehouse
+from .models import Warehouse, Item, StockEntry, StockExit
 from .serializers import WarehouseSerializer
-from .models import Item
 from .serializers import ItemSerializer
-from .models import StockEntry
 from .serializers import StockEntrySerializer
-from .models import StockExit
 from .serializers import StockExitSerializer
 from decimal import Decimal
-from .models import StockEntry, StockExit
 
 from django.db.models import Sum
-
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -99,3 +94,33 @@ class CurrentStockView(TenantRequiredMixin, APIView):
             })
 
         return Response(result)
+
+
+class DashboardSummaryView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get(self, request):
+        total_warehouses = Warehouse.objects.count()
+        total_items = Item.objects.count()
+        total_entries = StockEntry.objects.count()
+        total_exits = StockExit.objects.count()
+
+        entries_quantity = (
+            StockEntry.objects.aggregate(total=Sum("quantity")).get("total")
+            or Decimal("0")
+        )
+
+        exits_quantity = (
+            StockExit.objects.aggregate(total=Sum("quantity")).get("total")
+            or Decimal("0")
+        )
+
+        current_quantity = entries_quantity - exits_quantity
+
+        return Response({
+            "total_warehouses": total_warehouses,
+            "total_items": total_items,
+            "total_stock_entries": total_entries,
+            "total_stock_exits": total_exits,
+            "current_quantity": str(current_quantity),
+        })

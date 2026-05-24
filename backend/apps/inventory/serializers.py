@@ -70,10 +70,12 @@ class StockExitSerializer(serializers.ModelSerializer):
         warehouse = attrs.get("warehouse")
         item = attrs.get("item")
         quantity = attrs.get("quantity") or Decimal("0")
+        # tenant = self.context["request"].tenant
 
         total_entries = (
             StockEntry.objects
             .filter(warehouse=warehouse, item=item)
+            # .filter(tenant=tenant, warehouse=warehouse, item=item)
             .aggregate(total=Sum("quantity"))
             .get("total")
             or Decimal("0")
@@ -82,6 +84,7 @@ class StockExitSerializer(serializers.ModelSerializer):
         total_exits = (
             StockExit.objects
             .filter(warehouse=warehouse, item=item)
+            # .filter(tenant=tenant, warehouse=warehouse, item=item)
             .aggregate(total=Sum("quantity"))
             .get("total")
             or Decimal("0")

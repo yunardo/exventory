@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getWarehouses } from "../api/warehouses";
 import { getItems } from "../api/items";
 import { createStockExit, getStockExits } from "../api/stockExits";
+import { getCurrentStock } from "../api/currentStock";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ export function StockExitsPage() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<StockExitFormInput, unknown, StockExitFormValues>({
     resolver: zodResolver(stockExitSchema),
@@ -75,6 +77,20 @@ export function StockExitsPage() {
     queryKey: ["stock-exits", tenantSlug],
     queryFn: getStockExits,
   });
+
+  const { data: currentStock = [] } = useQuery({
+    queryKey: ["current-stock", tenantSlug],
+    queryFn: getCurrentStock,
+  });
+
+  const selectedWarehouse = Number(watch("warehouse"));
+  const selectedItem = Number(watch("item"));
+
+  const selectedStock = currentStock.find(
+    (row) =>
+      row.warehouse_id === selectedWarehouse &&
+      row.item_id === selectedItem
+  );
 
   const createMutation = useMutation({
     mutationFn: createStockExit,
@@ -160,6 +176,11 @@ export function StockExitsPage() {
               {errors.quantity && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.quantity.message}
+                </p>
+              )}
+              {selectedWarehouse > 0 && selectedItem > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Available stock: {selectedStock?.quantity ?? "0.00"}
                 </p>
               )}
             </div>
