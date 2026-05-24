@@ -33,6 +33,36 @@ jobs:
           IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${IMAGE_TAG}
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
+      
+      - name: Run migrations on ECS
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster exventory-prod-cluster \
+            --launch-type FARGATE \
+            --task-definition saas-api \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_SUBNET_A }},${{ secrets.ECS_SUBNET_B }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP }}],assignPublicIp=DISABLED}" \
+            --overrides '{"containerOverrides":[{"name":"saas_api","command":["python","manage.py","migrate","--noinput"]}]}' \
+            --query "tasks[0].taskArn" \
+            --output text)
+
+          echo "Migration task: $TASK_ARN"
+
+          aws ecs wait tasks-stopped \
+            --cluster exventory-prod-cluster \
+            --tasks "$TASK_ARN"
+
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster exventory-prod-cluster \
+            --tasks "$TASK_ARN" \
+            --query "tasks[0].containers[0].exitCode" \
+            --output text)
+
+          echo "Migration exit code: $EXIT_CODE"
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migration failed"
+            exit 1
+          fi
 
       - name: Deploy to ECS
         run: |
