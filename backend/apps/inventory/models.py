@@ -51,3 +51,26 @@ class StockEntry(TenantAwareModel):
 
     def __str__(self):
         return f"{self.item} -> {self.warehouse} ({self.quantity})"
+
+class StockExit(TenantAwareModel):
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="stock_exits",
+    )
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+        related_name="stock_exits",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    reference = models.CharField(max_length=120, blank=True)
+    exit_date = models.DateField()
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-exit_date", "-id"]
+
+    def __str__(self):
+        return f"{self.item} <- {self.warehouse} ({self.quantity})"

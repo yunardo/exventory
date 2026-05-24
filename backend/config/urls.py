@@ -22,6 +22,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.inventory.views import WarehouseViewSet
 from apps.inventory.views import ItemViewSet
 from apps.inventory.views import StockEntryViewSet
+from apps.inventory.views import StockExitViewSet
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView
@@ -41,6 +42,7 @@ router = DefaultRouter()
 router.register(r"warehouses", WarehouseViewSet, basename="warehouse")
 router.register(r"items", ItemViewSet, basename="items")
 router.register(r"stock-entries", StockEntryViewSet, basename="stock-entries")
+router.register(r"stock-exits", StockExitViewSet, basename="stock-exits")
 router.register(r"audit-logs", AuditLogViewSet, basename="audit-logs")
 
 urlpatterns = [

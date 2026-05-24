@@ -9,6 +9,8 @@ from .models import Item
 from .serializers import ItemSerializer
 from .models import StockEntry
 from .serializers import StockEntrySerializer
+from .models import StockExit
+from .serializers import StockExitSerializer
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -34,3 +36,10 @@ class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
 
     def get_queryset(self):
         return StockEntry.objects.select_related("warehouse", "item").all()
+
+class StockExitViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = StockExitSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get_queryset(self):
+        return StockExit.objects.select_related("warehouse", "item").all()
