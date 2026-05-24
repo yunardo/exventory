@@ -23,6 +23,7 @@ from apps.inventory.views import WarehouseViewSet
 from apps.inventory.views import ItemViewSet
 from apps.inventory.views import StockEntryViewSet
 from apps.inventory.views import StockExitViewSet
+from apps.inventory.views import CurrentStockView
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView
@@ -58,6 +59,7 @@ urlpatterns = [
 
     path("api/auth/me/", AuthMeView.as_view(), name="auth-me"),
     path("api/auth/tenants/", AuthTenantsView.as_view(), name="auth-tenants"),
+    path("api/current-stock/", CurrentStockView.as_view(), name="current-stock"),
 
     path("api/", include(router.urls)),
 ]

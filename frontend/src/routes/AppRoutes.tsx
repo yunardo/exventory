@@ -8,6 +8,7 @@ import { DashboardLayout } from "../layouts/DashboardLayout";
 import { WarehousesPage } from "../pages/WarehousesPage";
 import { ItemsPage } from "@/pages/ItemsPage";
 import { StockEntriesPage } from "@/pages/StockEntriesPage";
+import { StockExitsPage } from "@/pages/StockExitsPage";
 
 export function AppRoutes() {
   return (
@@ -24,6 +25,7 @@ export function AppRoutes() {
             <Route path="/warehouses" element={<WarehousesPage />} />
             <Route path="/items" element={<ItemsPage />} />
             <Route path="/stock-entries" element={<StockEntriesPage />} />
+            <Route path="/stock-exits" element={<StockExitsPage />} />
           </Route>
         </Route>
       </Routes>
