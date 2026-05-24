@@ -9,6 +9,7 @@ import { WarehousesPage } from "../pages/WarehousesPage";
 import { ItemsPage } from "@/pages/ItemsPage";
 import { StockEntriesPage } from "@/pages/StockEntriesPage";
 import { StockExitsPage } from "@/pages/StockExitsPage";
+import { CurrentStockPage } from "../pages/CurrentStockPage";
 
 export function AppRoutes() {
   return (
@@ -26,6 +27,7 @@ export function AppRoutes() {
             <Route path="/items" element={<ItemsPage />} />
             <Route path="/stock-entries" element={<StockEntriesPage />} />
             <Route path="/stock-exits" element={<StockExitsPage />} />
+            <Route path="/current-stock" element={<CurrentStockPage />} />
           </Route>
         </Route>
       </Routes>

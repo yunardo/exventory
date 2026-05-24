@@ -75,6 +75,17 @@ export function DashboardLayout() {
           >
             Stock Exits
           </NavLink>
+
+          <NavLink
+            to="/current-stock"
+            className={({ isActive }) =>
+              `block rounded-xl px-4 py-3 text-sm ${
+                isActive ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
+              }`
+            }
+          >
+            Current Stock
+          </NavLink>
         </nav>
       </aside>
 
