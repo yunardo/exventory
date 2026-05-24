@@ -1,6 +1,28 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../api/auth";
 
+const navGroups = [
+  {
+    title: "Overview",
+    links: [{ label: "Dashboard", to: "/dashboard" }],
+  },
+  {
+    title: "Inventory",
+    links: [
+      { label: "Current Stock", to: "/current-stock" },
+      { label: "Stock Entries", to: "/stock-entries" },
+      { label: "Stock Exits", to: "/stock-exits" },
+    ],
+  },
+  {
+    title: "Catalog",
+    links: [
+      { label: "Warehouses", to: "/warehouses" },
+      { label: "Items", to: "/items" },
+    ],
+  },
+];
+
 export function DashboardLayout() {
   const navigate = useNavigate();
   const tenantSlug = localStorage.getItem("tenant_slug");
@@ -20,78 +42,40 @@ export function DashboardLayout() {
           </p>
         </div>
 
-        <nav className="mt-4 space-y-1 px-3">
-          <NavLink
-            to="/dashboard"
-            className={({ isActive }) =>
-              `block rounded-xl px-4 py-3 text-sm ${
-                isActive ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
-              }`
-            }
-          >
-            Dashboard
-          </NavLink>
+        <nav className="mt-4 space-y-6 px-3">
+          {navGroups.map((group) => (
+            <div key={group.title}>
+              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                {group.title}
+              </p>
 
-          <NavLink
-            to="/warehouses"
-            className={({ isActive }) =>
-              `block rounded-xl px-4 py-3 text-sm ${
-                isActive ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
-              }`
-            }
-          >
-            Warehouses
-          </NavLink>
-
-          <NavLink
-            to="/items"
-            className={({ isActive }) =>
-              `block rounded-xl px-4 py-3 text-sm ${
-                isActive ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
-              }`
-            }
-          >
-            Items
-          </NavLink>
-
-          <NavLink
-            to="/stock-entries"
-            className={({ isActive }) =>
-              `block rounded-xl px-4 py-3 text-sm ${
-                isActive ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
-              }`
-            }
-          >
-            Stock Entries
-          </NavLink>
-
-          <NavLink
-            to="/stock-exits"
-            className={({ isActive }) =>
-              `block rounded-xl px-4 py-3 text-sm ${
-                isActive ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
-              }`
-            }
-          >
-            Stock Exits
-          </NavLink>
-
-          <NavLink
-            to="/current-stock"
-            className={({ isActive }) =>
-              `block rounded-xl px-4 py-3 text-sm ${
-                isActive ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
-              }`
-            }
-          >
-            Current Stock
-          </NavLink>
+              <div className="space-y-1">
+                {group.links.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={({ isActive }) =>
+                      `block rounded-xl px-4 py-3 text-sm ${
+                        isActive
+                          ? "bg-white text-slate-950"
+                          : "text-slate-300 hover:bg-white/10"
+                      }`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          ))}
         </nav>
       </aside>
 
       <div className="pl-64">
         <header className="flex h-16 items-center justify-between border-b bg-white px-8">
-          <span className="text-sm text-slate-500">SaaS Inventory Platform</span>
+          <span className="text-sm text-slate-500">
+            SaaS Inventory Platform
+          </span>
 
           <button
             onClick={handleLogout}

@@ -16,7 +16,7 @@ export function HomePage() {
       <section className="max-w-xl text-center">
         <h1 className="text-4xl font-bold">Exventory</h1>
         <p className="mt-4 text-slate-300">
-          Frontend connected to Django API.
+          Powered by Examine S.R.L.
         </p>
         <p className="mt-6 rounded-xl bg-white/10 px-4 py-3">
           API status: <strong>{status}</strong>

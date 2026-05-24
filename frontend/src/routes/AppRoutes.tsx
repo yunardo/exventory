@@ -10,6 +10,7 @@ import { ItemsPage } from "@/pages/ItemsPage";
 import { StockEntriesPage } from "@/pages/StockEntriesPage";
 import { StockExitsPage } from "@/pages/StockExitsPage";
 import { CurrentStockPage } from "../pages/CurrentStockPage";
+import { RequireTenant } from "./RequireTenant";
 
 export function AppRoutes() {
   return (
@@ -21,13 +22,15 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route path="/tenants" element={<TenantsPage />} />
 
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/warehouses" element={<WarehousesPage />} />
-            <Route path="/items" element={<ItemsPage />} />
-            <Route path="/stock-entries" element={<StockEntriesPage />} />
-            <Route path="/stock-exits" element={<StockExitsPage />} />
-            <Route path="/current-stock" element={<CurrentStockPage />} />
+          <Route element={<RequireTenant />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/warehouses" element={<WarehousesPage />} />
+              <Route path="/items" element={<ItemsPage />} />
+              <Route path="/stock-entries" element={<StockEntriesPage />} />
+              <Route path="/stock-exits" element={<StockExitsPage />} />
+              <Route path="/current-stock" element={<CurrentStockPage />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

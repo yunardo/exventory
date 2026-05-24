@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import { clearTokens } from "./token";
 
 export type LoginPayload = {
   username: string;
@@ -20,6 +21,24 @@ export async function login(payload: LoginPayload) {
 }
 
 export function logout() {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
+  clearTokens();
+  localStorage.removeItem("tenant_slug");
+}
+
+export type RefreshResponse = {
+  access: string;
+};
+
+export async function refreshAccessToken() {
+  const refresh = localStorage.getItem("refresh_token");
+
+  if (!refresh) {
+    throw new Error("No refresh token");
+  }
+
+  const response = await apiClient.post<RefreshResponse>("/api/auth/refresh/", {
+    refresh,
+  });
+
+  return response.data;
 }
