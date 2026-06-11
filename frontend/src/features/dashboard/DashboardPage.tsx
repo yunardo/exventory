@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getDashboardSummary } from "../api/dashboard";
+import { getDashboardSummary } from "./api";
 
 import {
   Card,
@@ -7,9 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTenant } from "../../context/TenantContext";
 
 export function DashboardPage() {
-  const tenantSlug = localStorage.getItem("tenant_slug");
+  const { tenantSlug } = useTenant();
 
   const {
     data: summary,

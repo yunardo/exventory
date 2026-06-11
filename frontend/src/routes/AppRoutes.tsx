@@ -1,15 +1,15 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { HomePage } from "../pages/HomePage";
-import { LoginPage } from "../pages/LoginPage";
-import { DashboardPage } from "../pages/DashboardPage";
-import { TenantsPage } from "../pages/TenantsPage";
+import { HomePage } from "@/pages/HomePage";
+import { LoginPage } from "@/pages/LoginPage";
+import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { TenantsPage } from "@/pages/TenantsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { DashboardLayout } from "../layouts/DashboardLayout";
-import { WarehousesPage } from "../pages/WarehousesPage";
-import { ItemsPage } from "@/pages/ItemsPage";
-import { StockEntriesPage } from "@/pages/StockEntriesPage";
-import { StockExitsPage } from "@/pages/StockExitsPage";
-import { CurrentStockPage } from "../pages/CurrentStockPage";
+import { DashboardLayout } from "@/layouts/DashboardLayout";
+import { WarehousesPage } from "@/features/warehouses/WarehousesPage";
+import { ItemsPage } from "@/features/items/ItemsPage";
+import { StockEntriesPage } from "@/features/stock-entries/StockEntriesPage";
+import { StockExitsPage } from "@/features/stock-exits/StockExitsPage";
+import { CurrentStockPage } from "@/features/current-stock/CurrentStockPage";
 import { RequireTenant } from "./RequireTenant";
 
 export function AppRoutes() {

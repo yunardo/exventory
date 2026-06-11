@@ -1,22 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTenants, type Tenant } from "../api/tenants";
+import { useTenant } from "../context/TenantContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function TenantsPage() {
   const navigate = useNavigate();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [error, setError] = useState("");
+  const { selectTenant } = useTenant();
+  const queryClient = useQueryClient();
+
+function selectWorkspace(slug: string) {
+  queryClient.clear();
+  selectTenant(slug);
+  navigate("/dashboard", { replace: true });
+}
 
   useEffect(() => {
     getTenants()
       .then(setTenants)
       .catch(() => setError("Could not load workspaces."));
   }, []);
-
-  function selectTenant(slug: string) {
-    localStorage.setItem("tenant_slug", slug);
-    navigate("/dashboard");
-  }
 
   return (
     <main className="min-h-screen bg-slate-100 p-8">
@@ -28,7 +33,7 @@ export function TenantsPage() {
         {tenants.map((tenant) => (
           <button
             key={tenant.id}
-            onClick={() => selectTenant(tenant.slug)}
+            onClick={() => selectWorkspace(tenant.slug)}
             className="rounded-2xl bg-white p-6 text-left shadow hover:shadow-md"
           >
             <h2 className="text-lg font-semibold text-slate-900">

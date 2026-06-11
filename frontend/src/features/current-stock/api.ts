@@ -1,4 +1,4 @@
-import { tenantApiClient } from "./tenantClient";
+import { tenantApiClient } from "../../api/tenantClient";
 
 export type CurrentStock = {
   warehouse_id: number;

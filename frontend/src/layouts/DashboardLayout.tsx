@@ -1,5 +1,7 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { logout } from "../api/auth";
+import { useTenant } from "../context/TenantContext";
 
 const navGroups = [
   {
@@ -25,10 +27,17 @@ const navGroups = [
 
 export function DashboardLayout() {
   const navigate = useNavigate();
-  const tenantSlug = localStorage.getItem("tenant_slug");
+  const { tenantSlug, clearTenant } = useTenant();
+
+  useEffect(() => {
+    if (!tenantSlug) {
+      navigate("/tenants", { replace: true });
+    }
+  }, [tenantSlug, navigate]);
 
   function handleLogout() {
     logout();
+    clearTenant();
     navigate("/login", { replace: true });
   }
 
@@ -77,12 +86,21 @@ export function DashboardLayout() {
             SaaS Inventory Platform
           </span>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/tenants")}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Change workspace
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         <main className="p-8">

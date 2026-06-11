@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentStock } from "../api/currentStock";
+import { getCurrentStock } from "./api";
 
 import {
   Card,
@@ -16,9 +16,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTenant } from "../../context/TenantContext";
 
 export function CurrentStockPage() {
-  const tenantSlug = localStorage.getItem("tenant_slug");
+  const { tenantSlug } = useTenant();
 
   const {
     data: currentStock = [],

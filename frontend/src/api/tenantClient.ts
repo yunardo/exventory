@@ -1,10 +1,12 @@
 import axios from "axios";
 import { clearTokens, getAccessToken, getRefreshToken, setAccessToken } from "./token";
+import { getTenantSlug } from "./tenantStorage";
 
 function getTenantBaseUrl() {
-  const tenantSlug = localStorage.getItem("tenant_slug");
+  const tenantSlug = getTenantSlug();
 
   if (!tenantSlug) {
+    window.location.href = "/tenants";
     throw new Error("Tenant not selected");
   }
 

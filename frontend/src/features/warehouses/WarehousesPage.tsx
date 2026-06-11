@@ -10,7 +10,7 @@ import {
   getWarehouses,
   updateWarehouse,
   type Warehouse,
-} from "../api/warehouses";
+} from "./api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTenant } from "../../context/TenantContext";
 
 const warehouseSchema = z.object({
   name: z.string().min(2, "Name must have at least 2 characters"),
@@ -38,7 +39,7 @@ type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 
 export function WarehousesPage() {
   const queryClient = useQueryClient();
-  const tenantSlug = localStorage.getItem("tenant_slug");
+  const { tenantSlug } = useTenant();
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
 
   const {

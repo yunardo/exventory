@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import { clearTokens } from "./token";
+import { clearTenantSlug } from "./tenantStorage";
 
 export type LoginPayload = {
   username: string;
@@ -22,7 +23,7 @@ export async function login(payload: LoginPayload) {
 
 export function logout() {
   clearTokens();
-  localStorage.removeItem("tenant_slug");
+  clearTenantSlug();
 }
 
 export type RefreshResponse = {

@@ -10,7 +10,7 @@ import {
   getItems,
   updateItem,
   type Item,
-} from "../api/items";
+} from "./api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTenant } from "../../context/TenantContext";
 
 const itemSchema = z.object({
   code: z.string().min(2, "Code must have at least 2 characters"),
@@ -40,7 +41,7 @@ type ItemFormValues = z.infer<typeof itemSchema>;
 
 export function ItemsPage() {
   const queryClient = useQueryClient();
-  const tenantSlug = localStorage.getItem("tenant_slug");
+  const { tenantSlug } = useTenant();
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
   const {

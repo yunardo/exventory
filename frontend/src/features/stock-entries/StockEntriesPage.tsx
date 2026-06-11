@@ -3,10 +3,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { getWarehouses } from "../api/warehouses";
-import { getItems } from "../api/items";
-import { createStockExit, getStockExits } from "../api/stockExits";
-import { getCurrentStock } from "../api/currentStock";
+import { getWarehouses } from "../warehouses/api";
+import { getItems } from "../items/api";
+import { createStockEntry, getStockEntries } from "./api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,37 +23,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTenant } from "../../context/TenantContext";
 
-const stockExitSchema = z.object({
+const stockEntrySchema = z.object({
   warehouse: z.coerce.number().min(1, "Warehouse is required"),
   item: z.coerce.number().min(1, "Item is required"),
   quantity: z.string().min(1, "Quantity is required"),
+  unit_cost: z.string().min(1, "Unit cost is required"),
   reference: z.string().optional(),
-  exit_date: z.string().min(1, "Exit date is required"),
+  entry_date: z.string().min(1, "Entry date is required"),
   notes: z.string().optional(),
 });
 
-type StockExitFormInput = z.input<typeof stockExitSchema>;
-type StockExitFormValues = z.output<typeof stockExitSchema>;
+type StockEntryFormInput = z.input<typeof stockEntrySchema>;
+type StockEntryFormValues = z.output<typeof stockEntrySchema>;
 
-export function StockExitsPage() {
+export function StockEntriesPage() {
   const queryClient = useQueryClient();
-  const tenantSlug = localStorage.getItem("tenant_slug");
+  const { tenantSlug } = useTenant();
 
   const {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
-  } = useForm<StockExitFormInput, unknown, StockExitFormValues>({
-    resolver: zodResolver(stockExitSchema),
+  } = useForm<StockEntryFormInput, unknown, StockEntryFormValues>({
+    resolver: zodResolver(stockEntrySchema),
     defaultValues: {
       warehouse: 0,
       item: 0,
       quantity: "",
+      unit_cost: "",
       reference: "",
-      exit_date: new Date().toISOString().slice(0, 10),
+      entry_date: new Date().toISOString().slice(0, 10),
       notes: "",
     },
   });
@@ -70,62 +71,49 @@ export function StockExitsPage() {
   });
 
   const {
-    data: stockExits = [],
+    data: stockEntries = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["stock-exits", tenantSlug],
-    queryFn: getStockExits,
+    queryKey: ["stock-entries", tenantSlug],
+    queryFn: getStockEntries,
   });
-
-  const { data: currentStock = [] } = useQuery({
-    queryKey: ["current-stock", tenantSlug],
-    queryFn: getCurrentStock,
-  });
-
-  const selectedWarehouse = Number(watch("warehouse"));
-  const selectedItem = Number(watch("item"));
-
-  const selectedStock = currentStock.find(
-    (row) =>
-      row.warehouse_id === selectedWarehouse &&
-      row.item_id === selectedItem
-  );
 
   const createMutation = useMutation({
-    mutationFn: createStockExit,
+    mutationFn: createStockEntry,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["stock-exits", tenantSlug],
+        queryKey: ["stock-entries", tenantSlug],
       });
 
       reset({
         warehouse: 0,
         item: 0,
         quantity: "",
+        unit_cost: "",
         reference: "",
-        exit_date: new Date().toISOString().slice(0, 10),
+        entry_date: new Date().toISOString().slice(0, 10),
         notes: "",
       });
     },
   });
 
-  function onSubmit(values: StockExitFormValues) {
+  function onSubmit(values: StockEntryFormValues) {
     createMutation.mutate(values);
   }
 
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Stock Exits</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Stock Entries</h2>
         <p className="text-muted-foreground">
-          Register outgoing stock for the selected workspace.
+          Register incoming stock for the selected workspace.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>New Stock Exit</CardTitle>
+          <CardTitle>New Stock Entry</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -178,9 +166,13 @@ export function StockExitsPage() {
                   {errors.quantity.message}
                 </p>
               )}
-              {selectedWarehouse > 0 && selectedItem > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Available stock: {selectedStock?.quantity ?? "0.00"}
+            </div>
+
+            <div>
+              <Input placeholder="Unit cost" {...register("unit_cost")} />
+              {errors.unit_cost && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.unit_cost.message}
                 </p>
               )}
             </div>
@@ -190,28 +182,28 @@ export function StockExitsPage() {
             </div>
 
             <div>
-              <Input type="date" {...register("exit_date")} />
-              {errors.exit_date && (
+              <Input type="date" {...register("entry_date")} />
+              {errors.entry_date && (
                 <p className="mt-1 text-sm text-red-600">
-                  {errors.exit_date.message}
+                  {errors.entry_date.message}
                 </p>
               )}
             </div>
 
-            <div>
+            <div className="md:col-span-3">
               <Input placeholder="Notes" {...register("notes")} />
             </div>
 
             <div className="md:col-span-3">
               <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creating..." : "Create Exit"}
+                {createMutation.isPending ? "Creating..." : "Create Entry"}
               </Button>
             </div>
           </form>
 
           {createMutation.isError && (
             <p className="mt-4 text-sm text-red-600">
-              Could not create stock exit.
+              Could not create stock entry.
             </p>
           )}
         </CardContent>
@@ -219,7 +211,7 @@ export function StockExitsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Exit List</CardTitle>
+          <CardTitle>Entry List</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -227,15 +219,15 @@ export function StockExitsPage() {
 
           {isError && (
             <p className="text-sm text-red-600">
-              Could not load stock exits.
+              Could not load stock entries.
             </p>
           )}
 
-          {!isLoading && !isError && stockExits.length === 0 && (
-            <p className="text-muted-foreground">No stock exits found.</p>
+          {!isLoading && !isError && stockEntries.length === 0 && (
+            <p className="text-muted-foreground">No stock entries found.</p>
           )}
 
-          {!isLoading && !isError && stockExits.length > 0 && (
+          {!isLoading && !isError && stockEntries.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -243,20 +235,22 @@ export function StockExitsPage() {
                   <TableHead>Warehouse</TableHead>
                   <TableHead>Item</TableHead>
                   <TableHead>Quantity</TableHead>
+                  <TableHead>Unit Cost</TableHead>
                   <TableHead>Reference</TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
-                {stockExits.map((exit) => (
-                  <TableRow key={exit.id}>
-                    <TableCell>{exit.exit_date}</TableCell>
-                    <TableCell>{exit.warehouse_name}</TableCell>
+                {stockEntries.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>{entry.entry_date}</TableCell>
+                    <TableCell>{entry.warehouse_name}</TableCell>
                     <TableCell>
-                      {exit.item_code} - {exit.item_name}
+                      {entry.item_code} - {entry.item_name}
                     </TableCell>
-                    <TableCell>{exit.quantity}</TableCell>
-                    <TableCell>{exit.reference || "-"}</TableCell>
+                    <TableCell>{entry.quantity}</TableCell>
+                    <TableCell>{entry.unit_cost}</TableCell>
+                    <TableCell>{entry.reference || "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

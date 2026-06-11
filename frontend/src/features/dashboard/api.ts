@@ -1,4 +1,4 @@
-import { tenantApiClient } from "./tenantClient";
+import { tenantApiClient } from "../../api/tenantClient";
 
 export type DashboardSummary = {
   total_warehouses: number;
