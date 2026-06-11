@@ -27,6 +27,7 @@ export function DashboardPage() {
     { title: "Stock Entries", value: summary?.total_stock_entries ?? 0 },
     { title: "Stock Exits", value: summary?.total_stock_exits ?? 0 },
     { title: "Current Quantity", value: summary?.current_quantity ?? "0.00" },
+    { title: "Inventory Value", value: summary?.current_value ?? "0.00" },
   ];
 
   return (

@@ -14,6 +14,7 @@ const navGroups = [
       { label: "Current Stock", to: "/current-stock" },
       { label: "Stock Entries", to: "/stock-entries" },
       { label: "Stock Exits", to: "/stock-exits" },
+      { label: "Stock Movements", to: "/stock-movements" },
     ],
   },
   {

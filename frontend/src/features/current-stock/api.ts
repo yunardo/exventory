@@ -7,6 +7,8 @@ export type CurrentStock = {
   item_code: string;
   item_name: string;
   quantity: string;
+  average_cost: string;
+  total_cost: string;
 };
 
 export async function getCurrentStock() {

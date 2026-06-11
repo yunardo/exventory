@@ -64,6 +64,8 @@ export function CurrentStockPage() {
                   <TableHead>Warehouse</TableHead>
                   <TableHead>Item</TableHead>
                   <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Avg Cost</TableHead>
+                  <TableHead className="text-right">Total Cost</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -77,6 +79,8 @@ export function CurrentStockPage() {
                     <TableCell className="text-right font-medium">
                       {row.quantity}
                     </TableCell>
+                    <TableCell className="text-right">{row.average_cost}</TableCell>
+                    <TableCell className="text-right font-medium">{row.total_cost}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

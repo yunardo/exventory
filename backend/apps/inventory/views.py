@@ -10,9 +10,8 @@ from .serializers import WarehouseSerializer
 from .serializers import ItemSerializer
 from .serializers import StockEntrySerializer
 from .serializers import StockExitSerializer
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
-
-from django.db.models import Sum
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -52,6 +51,11 @@ class CurrentStockView(TenantRequiredMixin, APIView):
     permission_classes = [IsAuthenticated, IsTenantMember]
 
     def get(self, request):
+        entry_total_cost = ExpressionWrapper(
+            F("quantity") * F("unit_cost"),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        )
+
         entries = (
             StockEntry.objects
             .select_related("warehouse", "item")
@@ -62,7 +66,10 @@ class CurrentStockView(TenantRequiredMixin, APIView):
                 "item__code",
                 "item__name",
             )
-            .annotate(total_entries=Sum("quantity"))
+            .annotate(
+                total_entries=Sum("quantity"),
+                total_cost_entries=Sum(entry_total_cost),
+            )
         )
 
         exits = (
@@ -80,9 +87,20 @@ class CurrentStockView(TenantRequiredMixin, APIView):
 
         for row in entries:
             key = (row["warehouse_id"], row["item_id"])
+
             total_entries = row["total_entries"] or Decimal("0")
             total_exits = exits_map.get(key) or Decimal("0")
             quantity = total_entries - total_exits
+
+            total_cost_entries = row["total_cost_entries"] or Decimal("0")
+
+            average_cost = (
+                total_cost_entries / total_entries
+                if total_entries > 0
+                else Decimal("0")
+            )
+
+            total_cost = quantity * average_cost
 
             result.append({
                 "warehouse_id": row["warehouse_id"],
@@ -91,6 +109,8 @@ class CurrentStockView(TenantRequiredMixin, APIView):
                 "item_code": row["item__code"],
                 "item_name": row["item__name"],
                 "quantity": str(quantity),
+                "average_cost": str(average_cost.quantize(Decimal("0.01"))),
+                "total_cost": str(total_cost.quantize(Decimal("0.01"))),
             })
 
         return Response(result)
@@ -117,10 +137,63 @@ class DashboardSummaryView(TenantRequiredMixin, APIView):
 
         current_quantity = entries_quantity - exits_quantity
 
+        entry_total_cost = ExpressionWrapper(
+            F("quantity") * F("unit_cost"),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        )
+
+        total_entry_cost = (
+            StockEntry.objects
+            .aggregate(total=Sum(entry_total_cost))
+            .get("total")
+            or Decimal("0")
+        )
+
         return Response({
             "total_warehouses": total_warehouses,
             "total_items": total_items,
             "total_stock_entries": total_entries,
             "total_stock_exits": total_exits,
             "current_quantity": str(current_quantity),
+            "current_value": str(total_entry_cost),
         })
+
+
+class StockMovementHistoryView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get(self, request):
+        entries = [
+            {
+                "type": "ENTRY",
+                "date": entry.entry_date,
+                "warehouse_name": entry.warehouse.name,
+                "item_code": entry.item.code,
+                "item_name": entry.item.name,
+                "quantity": str(entry.quantity),
+                "unit_cost": str(entry.unit_cost),
+                "reference": entry.reference,
+                "notes": entry.notes,
+            }
+            for entry in StockEntry.objects.select_related("warehouse", "item").all()
+        ]
+
+        exits = [
+            {
+                "type": "EXIT",
+                "date": exit.exit_date,
+                "warehouse_name": exit.warehouse.name,
+                "item_code": exit.item.code,
+                "item_name": exit.item.name,
+                "quantity": str(exit.quantity),
+                "unit_cost": None,
+                "reference": exit.reference,
+                "notes": exit.notes,
+            }
+            for exit in StockExit.objects.select_related("warehouse", "item").all()
+        ]
+
+        movements = entries + exits
+        movements.sort(key=lambda row: row["date"], reverse=True)
+
+        return Response(movements)

@@ -6,6 +6,7 @@ export type DashboardSummary = {
   total_stock_entries: number;
   total_stock_exits: number;
   current_quantity: string;
+  current_value: string;
 };
 
 export async function getDashboardSummary() {
