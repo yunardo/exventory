@@ -6,6 +6,7 @@ from apps.core.api import TenantRequiredMixin
 from apps.tenancy.permissions import IsTenantMember
 from apps.core.audit_mixins import AuditCrudMixin
 from .models import Warehouse, Item, StockEntry, StockExit
+from .models import StockLayer
 from .serializers import WarehouseSerializer
 from .serializers import ItemSerializer
 from .serializers import StockEntrySerializer
@@ -37,6 +38,21 @@ class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
 
     def get_queryset(self):
         return StockEntry.objects.select_related("warehouse", "item").all()
+    
+    def perform_create(self, serializer):
+        stock_entry = serializer.save()
+
+        StockLayer.objects.create(
+            stock_entry=stock_entry,
+            warehouse=stock_entry.warehouse,
+            item=stock_entry.item,
+            original_quantity=stock_entry.quantity,
+            remaining_quantity=stock_entry.quantity,
+            unit_cost=stock_entry.unit_cost,
+            entry_date=stock_entry.entry_date,
+        )
+
+        self.create_audit_log(stock_entry, "CREATE")
 
 
 class StockExitViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):

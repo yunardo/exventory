@@ -74,3 +74,34 @@ class StockExit(TenantAwareModel):
 
     def __str__(self):
         return f"{self.item} <- {self.warehouse} ({self.quantity})"
+
+
+class StockLayer(TenantAwareModel):
+    stock_entry = models.OneToOneField(
+        StockEntry,
+        on_delete=models.CASCADE,
+        related_name="stock_layer",
+    )
+
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="stock_layers",
+    )
+
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+        related_name="stock_layers",
+    )
+
+    original_quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    remaining_quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    entry_date = models.DateField()
+
+    class Meta:
+        ordering = ["entry_date", "id"]
+
+    def __str__(self):
+        return f"{self.item} - {self.remaining_quantity} @ {self.unit_cost}"
