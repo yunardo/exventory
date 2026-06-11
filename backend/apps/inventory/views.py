@@ -13,6 +13,7 @@ from .serializers import StockEntrySerializer
 from .serializers import StockExitSerializer
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
+from .models import StockLayer
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -67,13 +68,13 @@ class CurrentStockView(TenantRequiredMixin, APIView):
     permission_classes = [IsAuthenticated, IsTenantMember]
 
     def get(self, request):
-        entry_total_cost = ExpressionWrapper(
-            F("quantity") * F("unit_cost"),
+        layer_total_cost = ExpressionWrapper(
+            F("remaining_quantity") * F("unit_cost"),
             output_field=DecimalField(max_digits=18, decimal_places=2),
         )
 
-        entries = (
-            StockEntry.objects
+        rows = (
+            StockLayer.objects
             .select_related("warehouse", "item")
             .values(
                 "warehouse_id",
@@ -83,40 +84,22 @@ class CurrentStockView(TenantRequiredMixin, APIView):
                 "item__name",
             )
             .annotate(
-                total_entries=Sum("quantity"),
-                total_cost_entries=Sum(entry_total_cost),
+                quantity=Sum("remaining_quantity"),
+                total_cost=Sum(layer_total_cost),
             )
         )
-
-        exits = (
-            StockExit.objects
-            .values("warehouse_id", "item_id")
-            .annotate(total_exits=Sum("quantity"))
-        )
-
-        exits_map = {
-            (row["warehouse_id"], row["item_id"]): row["total_exits"]
-            for row in exits
-        }
 
         result = []
 
-        for row in entries:
-            key = (row["warehouse_id"], row["item_id"])
-
-            total_entries = row["total_entries"] or Decimal("0")
-            total_exits = exits_map.get(key) or Decimal("0")
-            quantity = total_entries - total_exits
-
-            total_cost_entries = row["total_cost_entries"] or Decimal("0")
+        for row in rows:
+            quantity = row["quantity"] or Decimal("0")
+            total_cost = row["total_cost"] or Decimal("0")
 
             average_cost = (
-                total_cost_entries / total_entries
-                if total_entries > 0
+                total_cost / quantity
+                if quantity > 0
                 else Decimal("0")
             )
-
-            total_cost = quantity * average_cost
 
             result.append({
                 "warehouse_id": row["warehouse_id"],
@@ -124,7 +107,7 @@ class CurrentStockView(TenantRequiredMixin, APIView):
                 "item_id": row["item_id"],
                 "item_code": row["item__code"],
                 "item_name": row["item__name"],
-                "quantity": str(quantity),
+                "quantity": str(quantity.quantize(Decimal("0.01"))),
                 "average_cost": str(average_cost.quantize(Decimal("0.01"))),
                 "total_cost": str(total_cost.quantize(Decimal("0.01"))),
             })
@@ -165,6 +148,21 @@ class DashboardSummaryView(TenantRequiredMixin, APIView):
             or Decimal("0")
         )
 
+        layer_total_cost = ExpressionWrapper(
+            F("remaining_quantity") * F("unit_cost"),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        )
+
+        current_quantity = (
+            StockLayer.objects.aggregate(total=Sum("remaining_quantity")).get("total")
+            or Decimal("0")
+        )
+
+        current_value = (
+            StockLayer.objects.aggregate(total=Sum(layer_total_cost)).get("total")
+            or Decimal("0")
+        )
+
         return Response({
             "total_warehouses": total_warehouses,
             "total_items": total_items,
@@ -172,6 +170,8 @@ class DashboardSummaryView(TenantRequiredMixin, APIView):
             "total_stock_exits": total_exits,
             "current_quantity": str(current_quantity),
             "current_value": str(total_entry_cost),
+            "current_quantity": str(current_quantity.quantize(Decimal("0.01"))),
+            "current_value": str(current_value.quantize(Decimal("0.01"))),
         })
 
 
