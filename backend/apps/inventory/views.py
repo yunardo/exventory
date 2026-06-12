@@ -61,7 +61,12 @@ class StockExitViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     permission_classes = [IsAuthenticated, IsTenantMember]
 
     def get_queryset(self):
-        return StockExit.objects.select_related("warehouse", "item").all()
+        return (
+            StockExit.objects
+            .select_related("warehouse", "item")
+            .prefetch_related("allocations")
+            .all()
+        )
 
 
 class CurrentStockView(TenantRequiredMixin, APIView):

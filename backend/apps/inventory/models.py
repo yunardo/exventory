@@ -105,3 +105,26 @@ class StockLayer(TenantAwareModel):
 
     def __str__(self):
         return f"{self.item} - {self.remaining_quantity} @ {self.unit_cost}"
+
+
+class StockExitAllocation(TenantAwareModel):
+    stock_exit = models.ForeignKey(
+        StockExit,
+        on_delete=models.CASCADE,
+        related_name="allocations",
+    )
+
+    stock_layer = models.ForeignKey(
+        StockLayer,
+        on_delete=models.PROTECT,
+        related_name="exit_allocations",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.stock_exit_id} -> {self.stock_layer_id} ({self.quantity})"
