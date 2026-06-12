@@ -67,6 +67,7 @@ export function StockMovementsPage() {
                   <TableHead>Item</TableHead>
                   <TableHead className="text-right">Quantity</TableHead>
                   <TableHead className="text-right">Unit Cost</TableHead>
+                  <TableHead className="text-right">Total Cost</TableHead>
                   <TableHead>Reference</TableHead>
                 </TableRow>
               </TableHeader>
@@ -95,6 +96,9 @@ export function StockMovementsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {movement.unit_cost ?? "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {movement.total_cost}
                     </TableCell>
                     <TableCell>{movement.reference || "-"}</TableCell>
                   </TableRow>

@@ -244,6 +244,7 @@ export function StockExitsPage() {
                   <TableHead>Warehouse</TableHead>
                   <TableHead>Item</TableHead>
                   <TableHead>Quantity</TableHead>
+                  <TableHead className="text-right">Total Cost</TableHead>
                   <TableHead>Reference</TableHead>
                 </TableRow>
               </TableHeader>
@@ -257,6 +258,9 @@ export function StockExitsPage() {
                       {exit.item_code} - {exit.item_name}
                     </TableCell>
                     <TableCell>{exit.quantity}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {exit.total_cost}
+                    </TableCell>
                     <TableCell>{exit.reference || "-"}</TableCell>
                   </TableRow>
                 ))}

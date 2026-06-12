@@ -11,6 +11,7 @@ export type StockExit = {
   reference: string;
   exit_date: string;
   notes: string;
+  total_cost: string;
 };
 
 export type CreateStockExitPayload = {

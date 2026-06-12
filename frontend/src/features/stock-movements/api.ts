@@ -8,6 +8,7 @@ export type StockMovement = {
   item_name: string;
   quantity: string;
   unit_cost: string | null;
+  total_cost: string;
   reference: string;
   notes: string;
 };

@@ -193,26 +193,38 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
                 "item_name": entry.item.name,
                 "quantity": str(entry.quantity),
                 "unit_cost": str(entry.unit_cost),
+                "total_cost": str((entry.quantity * entry.unit_cost).quantize(Decimal("0.01"))),
                 "reference": entry.reference,
                 "notes": entry.notes,
             }
             for entry in StockEntry.objects.select_related("warehouse", "item").all()
         ]
 
-        exits = [
-            {
+        exits = []
+
+        for stock_exit in (
+            StockExit.objects
+            .select_related("warehouse", "item")
+            .prefetch_related("allocations")
+            .all()
+        ):
+            total_cost = sum(
+                allocation.quantity * allocation.unit_cost
+                for allocation in stock_exit.allocations.all()
+            )
+
+            exits.append({
                 "type": "EXIT",
-                "date": exit.exit_date,
-                "warehouse_name": exit.warehouse.name,
-                "item_code": exit.item.code,
-                "item_name": exit.item.name,
-                "quantity": str(exit.quantity),
+                "date": stock_exit.exit_date,
+                "warehouse_name": stock_exit.warehouse.name,
+                "item_code": stock_exit.item.code,
+                "item_name": stock_exit.item.name,
+                "quantity": str(stock_exit.quantity),
                 "unit_cost": None,
-                "reference": exit.reference,
-                "notes": exit.notes,
-            }
-            for exit in StockExit.objects.select_related("warehouse", "item").all()
-        ]
+                "total_cost": str(total_cost.quantize(Decimal("0.01"))),
+                "reference": stock_exit.reference,
+                "notes": stock_exit.notes,
+            })
 
         movements = entries + exits
         movements.sort(key=lambda row: row["date"], reverse=True)
