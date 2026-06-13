@@ -2,7 +2,7 @@ import { tenantApiClient } from "../../api/tenantClient";
 
 export type KardexRow = {
   date: string;
-  type: "ENTRY" | "EXIT";
+  type: "ENTRY" | "EXIT" | "ADJUSTMENT_POSITIVE" | "ADJUSTMENT_NEGATIVE";
   reference: string;
   entry_quantity: string;
   exit_quantity: string;

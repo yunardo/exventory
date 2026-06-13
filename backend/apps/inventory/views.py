@@ -230,7 +230,41 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
                 "notes": stock_exit.notes,
             })
 
-        movements = entries + exits
+        adjustments = []
+
+        for adjustment in (
+            InventoryAdjustment.objects
+            .select_related("warehouse", "item")
+            .prefetch_related("allocations")
+            .all()
+        ):
+            if adjustment.adjustment_type == InventoryAdjustment.TYPE_POSITIVE:
+                total_cost = adjustment.quantity * adjustment.unit_cost
+                unit_cost = adjustment.unit_cost
+            else:
+                total_cost = sum(
+                    (
+                        allocation.quantity * allocation.unit_cost
+                        for allocation in adjustment.allocations.all()
+                    ),
+                    Decimal("0"),
+                )
+                unit_cost = None
+
+            adjustments.append({
+                "type": f"ADJUSTMENT_{adjustment.adjustment_type}",
+                "date": adjustment.adjustment_date,
+                "warehouse_name": adjustment.warehouse.name,
+                "item_code": adjustment.item.code,
+                "item_name": adjustment.item.name,
+                "quantity": str(adjustment.quantity),
+                "unit_cost": str(unit_cost) if unit_cost is not None else None,
+                "total_cost": str(total_cost.quantize(Decimal("0.01"))),
+                "reference": adjustment.reference,
+                "notes": adjustment.reason,
+            })
+
+        movements = entries + exits + adjustments
         movements.sort(key=lambda row: row["date"], reverse=True)
 
         return Response(movements)
@@ -301,6 +335,54 @@ class KardexView(TenantRequiredMixin, APIView):
                 "total_cost": total_cost,
                 "sort_id": stock_exit.id,
             })
+        
+        adjustments = (
+            InventoryAdjustment.objects
+            .select_related("warehouse", "item")
+            .prefetch_related("allocations")
+            .filter(warehouse_id=warehouse_id, item_id=item_id)
+        )
+
+        for adjustment in adjustments:
+            if adjustment.adjustment_type == InventoryAdjustment.TYPE_POSITIVE:
+                total_cost = adjustment.quantity * adjustment.unit_cost
+
+                movements.append({
+                    "date": adjustment.adjustment_date,
+                    "type": "ADJUSTMENT_POSITIVE",
+                    "reference": adjustment.reference,
+                    "entry_quantity": adjustment.quantity,
+                    "exit_quantity": Decimal("0"),
+                    "unit_cost": adjustment.unit_cost,
+                    "total_cost": total_cost,
+                    "sort_id": adjustment.id,
+                })
+
+            if adjustment.adjustment_type == InventoryAdjustment.TYPE_NEGATIVE:
+                total_cost = sum(
+                    (
+                        allocation.quantity * allocation.unit_cost
+                        for allocation in adjustment.allocations.all()
+                    ),
+                    Decimal("0"),
+                )
+
+                average_exit_cost = (
+                    total_cost / adjustment.quantity
+                    if adjustment.quantity > 0
+                    else Decimal("0")
+                )
+
+                movements.append({
+                    "date": adjustment.adjustment_date,
+                    "type": "ADJUSTMENT_NEGATIVE",
+                    "reference": adjustment.reference,
+                    "entry_quantity": Decimal("0"),
+                    "exit_quantity": adjustment.quantity,
+                    "unit_cost": average_exit_cost,
+                    "total_cost": total_cost,
+                    "sort_id": adjustment.id,
+                })
 
         movements.sort(key=lambda row: (row["date"], row["sort_id"]))
 

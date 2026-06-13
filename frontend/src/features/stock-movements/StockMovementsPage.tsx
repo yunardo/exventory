@@ -73,13 +73,17 @@ export function StockMovementsPage() {
               </TableHeader>
 
               <TableBody>
-                {movements.map((movement, index) => (
+                {movements.map((movement, index) => {
+                  const isPositive =
+                    movement.type === "ENTRY" ||
+                    movement.type === "ADJUSTMENT_POSITIVE";
+                  return (
                   <TableRow key={`${movement.type}-${movement.date}-${index}`}>
                     <TableCell>{movement.date}</TableCell>
                     <TableCell>
                       <span
                         className={
-                          movement.type === "ENTRY"
+                          isPositive
                             ? "rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700"
                             : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
                         }
@@ -102,7 +106,8 @@ export function StockMovementsPage() {
                     </TableCell>
                     <TableCell>{movement.reference || "-"}</TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
               </TableBody>
             </Table>
           )}

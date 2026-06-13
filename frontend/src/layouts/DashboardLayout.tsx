@@ -16,6 +16,7 @@ const navGroups = [
       { label: "Stock Exits", to: "/stock-exits" },
       { label: "Stock Movements", to: "/stock-movements" },
       { label: "Kardex", to: "/kardex" },
+      { label: "Inventory Adjustments", to: "/inventory-adjustments" },
     ],
   },
   {

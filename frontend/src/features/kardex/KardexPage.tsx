@@ -144,13 +144,16 @@ export function KardexPage() {
               </TableHeader>
 
               <TableBody>
-                {rows.map((row, index) => (
+                {rows.map((row, index) => {
+                  const isPositive =
+                    row.type === "ENTRY" || row.type === "ADJUSTMENT_POSITIVE";
+                  return (
                   <TableRow key={`${row.date}-${row.type}-${index}`}>
                     <TableCell>{row.date}</TableCell>
                     <TableCell>
                       <span
                         className={
-                          row.type === "ENTRY"
+                          isPositive
                             ? "rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700"
                             : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
                         }
@@ -180,7 +183,8 @@ export function KardexPage() {
                       {row.average_balance_cost}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
