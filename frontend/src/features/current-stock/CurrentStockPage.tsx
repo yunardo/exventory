@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentStock } from "./api";
+import { exportCurrentStock, getCurrentStock } from "./api";
 
 import {
   Card,
@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTenant } from "../../context/TenantContext";
+import { Button } from "@/components/ui/button";
 
 export function CurrentStockPage() {
   const { tenantSlug } = useTenant();
@@ -42,6 +43,18 @@ export function CurrentStockPage() {
       <Card>
         <CardHeader>
           <CardTitle>Stock Balance</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Current Stock</h2>
+              <p className="text-muted-foreground">
+                Current balance by warehouse and item.
+              </p>
+            </div>
+
+            <Button variant="outline" onClick={exportCurrentStock}>
+              Export Excel
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent>

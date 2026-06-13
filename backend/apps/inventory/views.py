@@ -616,3 +616,106 @@ class KardexExportView(KardexView):
         http_response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
         return http_response
+
+
+class CurrentStockExportView(CurrentStockView):
+    def get(self, request):
+        response = super().get(request)
+
+        if response.status_code != 200:
+            return response
+
+        rows = response.data
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Current Stock"
+
+        headers = [
+            "Warehouse",
+            "Item Code",
+            "Item Name",
+            "Quantity",
+            "Average Cost",
+            "Total Cost",
+        ]
+
+        ws.append(headers)
+
+        header_fill = PatternFill("solid", fgColor="1E293B")
+        header_font = Font(color="FFFFFF", bold=True)
+
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+
+        for row in rows:
+            ws.append([
+                row["warehouse_name"],
+                row["item_code"],
+                row["item_name"],
+                row["quantity"],
+                row["average_cost"],
+                row["total_cost"],
+            ])
+
+        for column_cells in ws.columns:
+            max_length = max(len(str(cell.value or "")) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = max_length + 2
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        http_response = HttpResponse(
+            output,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        http_response["Content-Disposition"] = 'attachment; filename="current_stock.xlsx"'
+
+        return http_response
+
+
+class InventoryValuationView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get(self, request):
+        layer_value = ExpressionWrapper(
+            F("remaining_quantity") * F("unit_cost"),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        )
+
+        rows = (
+            StockLayer.objects
+            .values(
+                "warehouse_id",
+                "warehouse__name",
+            )
+            .annotate(
+                inventory_value=Sum(layer_value),
+            )
+        )
+
+        warehouses = []
+        total_inventory_value = Decimal("0")
+
+        for row in rows:
+            value = row["inventory_value"] or Decimal("0")
+
+            warehouses.append({
+                "warehouse_id": row["warehouse_id"],
+                "warehouse_name": row["warehouse__name"],
+                "inventory_value": str(
+                    value.quantize(Decimal("0.01"))
+                ),
+            })
+
+            total_inventory_value += value
+
+        return Response({
+            "total_inventory_value": str(
+                total_inventory_value.quantize(Decimal("0.01"))
+            ),
+            "warehouses": warehouses,
+        })
