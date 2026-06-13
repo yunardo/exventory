@@ -9,6 +9,8 @@ export type KardexRow = {
   balance_quantity: string;
   unit_cost: string;
   total_cost: string;
+  balance_value: string;
+  average_balance_cost: string;
 };
 
 export async function getKardex(warehouseId: number, itemId: number) {

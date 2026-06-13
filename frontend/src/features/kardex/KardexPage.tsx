@@ -135,9 +135,11 @@ export function KardexPage() {
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Entry</TableHead>
                   <TableHead className="text-right">Exit</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
+                  <TableHead className="text-right">Balance Qty</TableHead>
                   <TableHead className="text-right">Unit Cost</TableHead>
-                  <TableHead className="text-right">Total Cost</TableHead>
+                  <TableHead className="text-right">Movement Cost</TableHead>
+                  <TableHead className="text-right">Balance Value</TableHead>
+                  <TableHead className="text-right">Avg Balance Cost</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -169,6 +171,13 @@ export function KardexPage() {
                     <TableCell className="text-right">{row.unit_cost}</TableCell>
                     <TableCell className="text-right font-medium">
                       {row.total_cost}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {row.balance_value}
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {row.average_balance_cost}
                     </TableCell>
                   </TableRow>
                 ))}

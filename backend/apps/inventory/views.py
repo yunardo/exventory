@@ -303,12 +303,24 @@ class KardexView(TenantRequiredMixin, APIView):
 
         movements.sort(key=lambda row: (row["date"], row["sort_id"]))
 
-        balance = Decimal("0")
+        balance_quantity = Decimal("0")
+        balance_value = Decimal("0")
         result = []
 
         for row in movements:
-            balance += row["entry_quantity"]
-            balance -= row["exit_quantity"]
+            if row["type"] == "ENTRY":
+                balance_quantity += row["entry_quantity"]
+                balance_value += row["total_cost"]
+
+            if row["type"] == "EXIT":
+                balance_quantity -= row["exit_quantity"]
+                balance_value -= row["total_cost"]
+
+            average_balance_cost = (
+                balance_value / balance_quantity
+                if balance_quantity > 0
+                else Decimal("0")
+            )
 
             result.append({
                 "date": row["date"],
@@ -316,9 +328,11 @@ class KardexView(TenantRequiredMixin, APIView):
                 "reference": row["reference"],
                 "entry_quantity": str(row["entry_quantity"].quantize(Decimal("0.01"))),
                 "exit_quantity": str(row["exit_quantity"].quantize(Decimal("0.01"))),
-                "balance_quantity": str(balance.quantize(Decimal("0.01"))),
+                "balance_quantity": str(balance_quantity.quantize(Decimal("0.01"))),
                 "unit_cost": str(row["unit_cost"].quantize(Decimal("0.01"))),
                 "total_cost": str(row["total_cost"].quantize(Decimal("0.01"))),
+                "balance_value": str(balance_value.quantize(Decimal("0.01"))),
+                "average_balance_cost": str(average_balance_cost.quantize(Decimal("0.01"))),
             })
 
         return Response(result)
