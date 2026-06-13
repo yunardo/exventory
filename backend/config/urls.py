@@ -28,6 +28,7 @@ from apps.inventory.views import DashboardSummaryView
 from apps.inventory.views import StockMovementHistoryView
 from apps.inventory.views import KardexView
 from apps.inventory.views import InventoryAdjustmentViewSet
+from apps.inventory.views import StockTransferViewSet
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView
@@ -53,6 +54,11 @@ router.register(
     r"inventory-adjustments",
     InventoryAdjustmentViewSet,
     basename="inventory-adjustments",
+)
+router.register(
+    r"stock-transfers",
+    StockTransferViewSet,
+    basename="stock-transfers",
 )
 
 urlpatterns = [

@@ -195,3 +195,54 @@ class InventoryAdjustmentAllocation(TenantAwareModel):
 
     def __str__(self):
         return f"{self.adjustment_id} -> {self.stock_layer_id} ({self.quantity})"
+
+
+class StockTransfer(TenantAwareModel):
+    source_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="outgoing_transfers",
+    )
+    destination_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="incoming_transfers",
+    )
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+        related_name="stock_transfers",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    transfer_date = models.DateField()
+    reference = models.CharField(max_length=120, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-transfer_date", "-id"]
+
+    def __str__(self):
+        return f"{self.item} {self.source_warehouse} -> {self.destination_warehouse}"
+
+
+class StockTransferAllocation(TenantAwareModel):
+    stock_transfer = models.ForeignKey(
+        StockTransfer,
+        on_delete=models.CASCADE,
+        related_name="allocations",
+    )
+    stock_layer = models.ForeignKey(
+        StockLayer,
+        on_delete=models.PROTECT,
+        related_name="transfer_allocations",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.stock_transfer_id} -> {self.stock_layer_id} ({self.quantity})"

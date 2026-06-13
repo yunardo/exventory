@@ -9,6 +9,8 @@ from django.db import transaction
 
 from .models import StockEntry, StockExit, StockLayer, StockExitAllocation
 from .models import InventoryAdjustment, InventoryAdjustmentAllocation
+from .models import StockTransfer, StockTransferAllocation
+
 
 
 class WarehouseSerializer(serializers.ModelSerializer):
@@ -277,3 +279,131 @@ class InventoryAdjustmentSerializer(serializers.ModelSerializer):
             quantity_to_consume -= consumed_quantity
 
         return adjustment
+
+
+class StockTransferSerializer(serializers.ModelSerializer):
+    source_warehouse_name = serializers.CharField(
+        source="source_warehouse.name",
+        read_only=True,
+    )
+    destination_warehouse_name = serializers.CharField(
+        source="destination_warehouse.name",
+        read_only=True,
+    )
+    item_code = serializers.CharField(source="item.code", read_only=True)
+    item_name = serializers.CharField(source="item.name", read_only=True)
+    total_cost = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StockTransfer
+        fields = [
+            "id",
+            "source_warehouse",
+            "source_warehouse_name",
+            "destination_warehouse",
+            "destination_warehouse_name",
+            "item",
+            "item_code",
+            "item_name",
+            "quantity",
+            "transfer_date",
+            "reference",
+            "notes",
+            "total_cost",
+        ]
+
+    def get_total_cost(self, obj):
+        total = sum(
+            (
+                allocation.quantity * allocation.unit_cost
+                for allocation in obj.allocations.all()
+            ),
+            Decimal("0"),
+        )
+        return str(total.quantize(Decimal("0.01")))
+
+    def validate(self, attrs):
+        source = attrs.get("source_warehouse")
+        destination = attrs.get("destination_warehouse")
+        item = attrs.get("item")
+        quantity = attrs.get("quantity") or Decimal("0")
+
+        if source == destination:
+            raise serializers.ValidationError({
+                "destination_warehouse": "Destination warehouse must be different from source warehouse."
+            })
+
+        if quantity <= 0:
+            raise serializers.ValidationError({
+                "quantity": "Quantity must be greater than zero."
+            })
+
+        available = (
+            StockLayer.objects
+            .filter(
+                warehouse=source,
+                item=item,
+                remaining_quantity__gt=0,
+            )
+            .aggregate(total=Sum("remaining_quantity"))
+            .get("total")
+            or Decimal("0")
+        )
+
+        if quantity > available:
+            raise serializers.ValidationError({
+                "quantity": f"Not enough stock available. Available: {available}"
+            })
+
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        tenant = validated_data.get("tenant") or self.context["request"].tenant
+        quantity_to_transfer = validated_data["quantity"]
+
+        stock_transfer = StockTransfer.objects.create(**validated_data)
+
+        layers = (
+            StockLayer.objects
+            .select_for_update()
+            .filter(
+                tenant=tenant,
+                warehouse=stock_transfer.source_warehouse,
+                item=stock_transfer.item,
+                remaining_quantity__gt=0,
+            )
+            .order_by("entry_date", "id")
+        )
+
+        for layer in layers:
+            if quantity_to_transfer <= 0:
+                break
+
+            consumed_quantity = min(quantity_to_transfer, layer.remaining_quantity)
+
+            StockTransferAllocation.objects.create(
+                tenant=tenant,
+                stock_transfer=stock_transfer,
+                stock_layer=layer,
+                quantity=consumed_quantity,
+                unit_cost=layer.unit_cost,
+            )
+
+            StockLayer.objects.create(
+                tenant=tenant,
+                stock_entry=None,
+                warehouse=stock_transfer.destination_warehouse,
+                item=stock_transfer.item,
+                original_quantity=consumed_quantity,
+                remaining_quantity=consumed_quantity,
+                unit_cost=layer.unit_cost,
+                entry_date=stock_transfer.transfer_date,
+            )
+
+            layer.remaining_quantity -= consumed_quantity
+            layer.save(update_fields=["remaining_quantity"])
+
+            quantity_to_transfer -= consumed_quantity
+
+        return stock_transfer

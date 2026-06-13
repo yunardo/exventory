@@ -7,6 +7,8 @@ from apps.tenancy.permissions import IsTenantMember
 from apps.core.audit_mixins import AuditCrudMixin
 from .models import Warehouse, Item, StockEntry, StockExit
 from .models import StockLayer, InventoryAdjustment
+from .models import StockTransfer
+from .serializers import StockTransferSerializer
 from .serializers import WarehouseSerializer
 from .serializers import ItemSerializer
 from .serializers import StockEntrySerializer
@@ -429,6 +431,19 @@ class InventoryAdjustmentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewS
         return (
             InventoryAdjustment.objects
             .select_related("warehouse", "item")
+            .prefetch_related("allocations")
+            .all()
+        )
+
+
+class StockTransferViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = StockTransferSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get_queryset(self):
+        return (
+            StockTransfer.objects
+            .select_related("source_warehouse", "destination_warehouse", "item")
             .prefetch_related("allocations")
             .all()
         )
