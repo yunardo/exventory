@@ -8,6 +8,7 @@ from django.db.models import Sum
 from django.db import transaction
 
 from .models import StockEntry, StockExit, StockLayer, StockExitAllocation
+from .models import InventoryAdjustment, InventoryAdjustmentAllocation
 
 
 class WarehouseSerializer(serializers.ModelSerializer):
@@ -144,3 +145,135 @@ class StockExitSerializer(serializers.ModelSerializer):
             quantity_to_consume -= consumed_quantity
 
         return stock_exit
+
+
+class InventoryAdjustmentSerializer(serializers.ModelSerializer):
+    warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
+    item_code = serializers.CharField(source="item.code", read_only=True)
+    item_name = serializers.CharField(source="item.name", read_only=True)
+    total_cost = serializers.SerializerMethodField()
+
+    class Meta:
+        model = InventoryAdjustment
+        fields = [
+            "id",
+            "warehouse",
+            "warehouse_name",
+            "item",
+            "item_code",
+            "item_name",
+            "adjustment_type",
+            "quantity",
+            "unit_cost",
+            "reference",
+            "adjustment_date",
+            "reason",
+            "total_cost",
+        ]
+
+    def get_total_cost(self, obj):
+        if obj.adjustment_type == InventoryAdjustment.TYPE_POSITIVE:
+            if obj.unit_cost is None:
+                return "0.00"
+            total = obj.quantity * obj.unit_cost
+            return str(total.quantize(Decimal("0.01")))
+
+        total = sum(
+            (
+                allocation.quantity * allocation.unit_cost
+                for allocation in obj.allocations.all()
+            ),
+            Decimal("0"),
+        )
+        return str(total.quantize(Decimal("0.01")))
+
+    def validate(self, attrs):
+        adjustment_type = attrs.get("adjustment_type")
+        warehouse = attrs.get("warehouse")
+        item = attrs.get("item")
+        quantity = attrs.get("quantity") or Decimal("0")
+        unit_cost = attrs.get("unit_cost")
+
+        if quantity <= 0:
+            raise serializers.ValidationError({
+                "quantity": "Quantity must be greater than zero."
+            })
+
+        if adjustment_type == InventoryAdjustment.TYPE_POSITIVE and unit_cost is None:
+            raise serializers.ValidationError({
+                "unit_cost": "Unit cost is required for positive adjustments."
+            })
+
+        if adjustment_type == InventoryAdjustment.TYPE_NEGATIVE:
+            available = (
+                StockLayer.objects
+                .filter(
+                    warehouse=warehouse,
+                    item=item,
+                    remaining_quantity__gt=0,
+                )
+                .aggregate(total=Sum("remaining_quantity"))
+                .get("total")
+                or Decimal("0")
+            )
+
+            if quantity > available:
+                raise serializers.ValidationError({
+                    "quantity": f"Not enough stock available. Available: {available}"
+                })
+
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        tenant = validated_data.get("tenant") or self.context["request"].tenant
+
+        adjustment = InventoryAdjustment.objects.create(**validated_data)
+
+        if adjustment.adjustment_type == InventoryAdjustment.TYPE_POSITIVE:
+            StockLayer.objects.create(
+                tenant=tenant,
+                stock_entry=None,  # esto requiere cambio si stock_entry es OneToOne NOT NULL
+                warehouse=adjustment.warehouse,
+                item=adjustment.item,
+                original_quantity=adjustment.quantity,
+                remaining_quantity=adjustment.quantity,
+                unit_cost=adjustment.unit_cost,
+                entry_date=adjustment.adjustment_date,
+            )
+            return adjustment
+
+        quantity_to_consume = adjustment.quantity
+
+        layers = (
+            StockLayer.objects
+            .select_for_update()
+            .filter(
+                tenant=tenant,
+                warehouse=adjustment.warehouse,
+                item=adjustment.item,
+                remaining_quantity__gt=0,
+            )
+            .order_by("entry_date", "id")
+        )
+
+        for layer in layers:
+            if quantity_to_consume <= 0:
+                break
+
+            consumed_quantity = min(quantity_to_consume, layer.remaining_quantity)
+
+            InventoryAdjustmentAllocation.objects.create(
+                tenant=tenant,
+                adjustment=adjustment,
+                stock_layer=layer,
+                quantity=consumed_quantity,
+                unit_cost=layer.unit_cost,
+            )
+
+            layer.remaining_quantity -= consumed_quantity
+            layer.save(update_fields=["remaining_quantity"])
+
+            quantity_to_consume -= consumed_quantity
+
+        return adjustment

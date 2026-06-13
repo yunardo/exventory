@@ -81,6 +81,8 @@ class StockLayer(TenantAwareModel):
         StockEntry,
         on_delete=models.CASCADE,
         related_name="stock_layer",
+        null=True,
+        blank=True,
     )
 
     warehouse = models.ForeignKey(
@@ -128,3 +130,68 @@ class StockExitAllocation(TenantAwareModel):
 
     def __str__(self):
         return f"{self.stock_exit_id} -> {self.stock_layer_id} ({self.quantity})"
+
+
+class InventoryAdjustment(TenantAwareModel):
+    TYPE_POSITIVE = "POSITIVE"
+    TYPE_NEGATIVE = "NEGATIVE"
+
+    TYPES = [
+        (TYPE_POSITIVE, "Positive"),
+        (TYPE_NEGATIVE, "Negative"),
+    ]
+
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="inventory_adjustments",
+    )
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+        related_name="inventory_adjustments",
+    )
+
+    adjustment_type = models.CharField(max_length=20, choices=TYPES)
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+
+    unit_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Required for positive adjustments",
+    )
+
+    reference = models.CharField(max_length=120, blank=True)
+    adjustment_date = models.DateField()
+    reason = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-adjustment_date", "-id"]
+
+    def __str__(self):
+        return f"{self.adjustment_type} {self.item} ({self.quantity})"
+
+
+class InventoryAdjustmentAllocation(TenantAwareModel):
+    adjustment = models.ForeignKey(
+        InventoryAdjustment,
+        on_delete=models.CASCADE,
+        related_name="allocations",
+    )
+
+    stock_layer = models.ForeignKey(
+        StockLayer,
+        on_delete=models.PROTECT,
+        related_name="adjustment_allocations",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.adjustment_id} -> {self.stock_layer_id} ({self.quantity})"

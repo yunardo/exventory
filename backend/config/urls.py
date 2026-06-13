@@ -27,6 +27,7 @@ from apps.inventory.views import CurrentStockView
 from apps.inventory.views import DashboardSummaryView
 from apps.inventory.views import StockMovementHistoryView
 from apps.inventory.views import KardexView
+from apps.inventory.views import InventoryAdjustmentViewSet
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView
@@ -48,6 +49,11 @@ router.register(r"items", ItemViewSet, basename="items")
 router.register(r"stock-entries", StockEntryViewSet, basename="stock-entries")
 router.register(r"stock-exits", StockExitViewSet, basename="stock-exits")
 router.register(r"audit-logs", AuditLogViewSet, basename="audit-logs")
+router.register(
+    r"inventory-adjustments",
+    InventoryAdjustmentViewSet,
+    basename="inventory-adjustments",
+)
 
 urlpatterns = [
     path("", root_view),

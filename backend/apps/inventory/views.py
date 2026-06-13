@@ -6,14 +6,14 @@ from apps.core.api import TenantRequiredMixin
 from apps.tenancy.permissions import IsTenantMember
 from apps.core.audit_mixins import AuditCrudMixin
 from .models import Warehouse, Item, StockEntry, StockExit
-from .models import StockLayer
+from .models import StockLayer, InventoryAdjustment
 from .serializers import WarehouseSerializer
 from .serializers import ItemSerializer
 from .serializers import StockEntrySerializer
 from .serializers import StockExitSerializer
+from .serializers import InventoryAdjustmentSerializer
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
-from .models import StockLayer
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -337,3 +337,16 @@ class KardexView(TenantRequiredMixin, APIView):
             })
 
         return Response(result)
+
+
+class InventoryAdjustmentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = InventoryAdjustmentSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get_queryset(self):
+        return (
+            InventoryAdjustment.objects
+            .select_related("warehouse", "item")
+            .prefetch_related("allocations")
+            .all()
+        )
