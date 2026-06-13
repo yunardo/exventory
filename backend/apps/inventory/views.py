@@ -41,9 +41,12 @@ class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
         return StockEntry.objects.select_related("warehouse", "item").all()
     
     def perform_create(self, serializer):
-        stock_entry = serializer.save()
+        tenant = self.request.tenant
+
+        stock_entry = serializer.save(tenant=tenant)
 
         StockLayer.objects.create(
+            tenant=tenant,
             stock_entry=stock_entry,
             warehouse=stock_entry.warehouse,
             item=stock_entry.item,

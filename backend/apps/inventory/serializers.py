@@ -109,7 +109,12 @@ class StockExitSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         quantity_to_consume = validated_data["quantity"]
 
-        stock_exit = StockExit.objects.create(**validated_data)
+        tenant = self.context["request"].tenant
+
+        stock_exit = StockExit.objects.create(
+            tenant=tenant,
+            **validated_data,
+        )
 
         layers = (
             StockLayer.objects
@@ -129,6 +134,7 @@ class StockExitSerializer(serializers.ModelSerializer):
             consumed_quantity = min(quantity_to_consume, layer.remaining_quantity)
 
             StockExitAllocation.objects.create(
+                tenant=tenant,
                 stock_exit=stock_exit,
                 stock_layer=layer,
                 quantity=consumed_quantity,
