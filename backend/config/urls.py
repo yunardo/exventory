@@ -32,6 +32,7 @@ from apps.inventory.views import StockTransferViewSet
 from apps.inventory.views import KardexExportView
 from apps.inventory.views import CurrentStockExportView
 from apps.inventory.views import InventoryValuationView
+from apps.inventory.views import InventoryValuationExportView
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView
@@ -84,6 +85,7 @@ urlpatterns = [
     path("api/kardex/export/", KardexExportView.as_view(), name="kardex-export"),
     path("api/current-stock/export/", CurrentStockExportView.as_view(), name="current-stock-export"),
     path("api/inventory-valuation/", InventoryValuationView.as_view(), name="inventory-valuation"),
+    path("api/inventory-valuation/export/", InventoryValuationExportView.as_view(), name="inventory-valuation-export"),
 
     path("api/", include(router.urls)),
 ]

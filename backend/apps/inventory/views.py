@@ -719,3 +719,65 @@ class InventoryValuationView(TenantRequiredMixin, APIView):
             ),
             "warehouses": warehouses,
         })
+
+
+class InventoryValuationExportView(InventoryValuationView):
+    def get(self, request):
+        response = super().get(request)
+
+        if response.status_code != 200:
+            return response
+
+        data = response.data
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Inventory Valuation"
+
+        headers = [
+            "Warehouse",
+            "Inventory Value",
+        ]
+
+        ws.append(headers)
+
+        header_fill = PatternFill("solid", fgColor="1E293B")
+        header_font = Font(color="FFFFFF", bold=True)
+
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+
+        for warehouse in data["warehouses"]:
+            ws.append([
+                warehouse["warehouse_name"],
+                warehouse["inventory_value"],
+            ])
+
+        ws.append([])
+        ws.append([
+            "TOTAL INVENTORY VALUE",
+            data["total_inventory_value"],
+        ])
+
+        for cell in ws[ws.max_row]:
+            cell.font = Font(bold=True)
+
+        for column_cells in ws.columns:
+            max_length = max(len(str(cell.value or "")) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = max_length + 2
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        http_response = HttpResponse(
+            output,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        http_response["Content-Disposition"] = (
+            'attachment; filename="inventory_valuation.xlsx"'
+        )
+
+        return http_response
