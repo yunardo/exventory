@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getCurrentStock } from "../current-stock/api";
 
 const adjustmentSchema = z
   .object({
@@ -96,6 +97,20 @@ export function InventoryAdjustmentsPage() {
     queryKey: ["inventory-adjustments", tenantSlug],
     queryFn: getInventoryAdjustments,
   });
+
+  const { data: currentStock = [] } = useQuery({
+    queryKey: ["current-stock", tenantSlug],
+    queryFn: getCurrentStock,
+  });
+
+  const selectedWarehouse = Number(watch("warehouse"));
+  const selectedItem = Number(watch("item"));
+
+  const selectedStock = currentStock.find(
+    (row) =>
+      row.warehouse_id === selectedWarehouse &&
+      row.item_id === selectedItem
+  );
 
   const createMutation = useMutation({
     mutationFn: createInventoryAdjustment,
@@ -204,6 +219,13 @@ export function InventoryAdjustmentsPage() {
 
             <div>
               <Input placeholder="Quantity" {...register("quantity")} />
+              {adjustmentType === "NEGATIVE" &&
+                selectedWarehouse > 0 &&
+                selectedItem > 0 && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Available stock: {selectedStock?.quantity ?? "0.00"}
+                  </p>
+                )}
               {errors.quantity && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.quantity.message}
