@@ -2,10 +2,11 @@ import { tenantApiClient } from "../../api/tenantClient";
 
 export type StockMovement = {
   type:
-  | "ENTRY"
-  | "EXIT"
-  | "ADJUSTMENT_POSITIVE"
-  | "ADJUSTMENT_NEGATIVE";
+    | "ENTRY"
+    | "EXIT"
+    | "ADJUSTMENT_POSITIVE"
+    | "ADJUSTMENT_NEGATIVE"
+    | "TRANSFER";
   date: string;
   warehouse_name: string;
   item_code: string;

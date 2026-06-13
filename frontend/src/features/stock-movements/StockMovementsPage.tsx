@@ -77,15 +77,20 @@ export function StockMovementsPage() {
                   const isPositive =
                     movement.type === "ENTRY" ||
                     movement.type === "ADJUSTMENT_POSITIVE";
+
+                  const isTransfer = movement.type === "TRANSFER";
+
                   return (
                   <TableRow key={`${movement.type}-${movement.date}-${index}`}>
                     <TableCell>{movement.date}</TableCell>
                     <TableCell>
                       <span
                         className={
-                          isPositive
-                            ? "rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700"
-                            : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
+                          isTransfer
+                            ? "rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700"
+                            : isPositive
+                              ? "rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700"
+                              : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
                         }
                       >
                         {movement.type}

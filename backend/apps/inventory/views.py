@@ -265,8 +265,37 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
                 "reference": adjustment.reference,
                 "notes": adjustment.reason,
             })
+        
+        transfers = []
 
-        movements = entries + exits + adjustments
+        for transfer in (
+            StockTransfer.objects
+            .select_related("source_warehouse", "destination_warehouse", "item")
+            .prefetch_related("allocations")
+            .all()
+        ):
+            total_cost = sum(
+                (
+                    allocation.quantity * allocation.unit_cost
+                    for allocation in transfer.allocations.all()
+                ),
+                Decimal("0"),
+            )
+
+            transfers.append({
+                "type": "TRANSFER",
+                "date": transfer.transfer_date,
+                "warehouse_name": f"{transfer.source_warehouse.name} → {transfer.destination_warehouse.name}",
+                "item_code": transfer.item.code,
+                "item_name": transfer.item.name,
+                "quantity": str(transfer.quantity),
+                "unit_cost": None,
+                "total_cost": str(total_cost.quantize(Decimal("0.01"))),
+                "reference": transfer.reference,
+                "notes": transfer.notes,
+            })
+
+        movements = entries + exits + adjustments + transfers
         movements.sort(key=lambda row: row["date"], reverse=True)
 
         return Response(movements)
@@ -385,6 +414,72 @@ class KardexView(TenantRequiredMixin, APIView):
                     "total_cost": total_cost,
                     "sort_id": adjustment.id,
                 })
+        
+        transfers_out = (
+            StockTransfer.objects
+            .select_related("source_warehouse", "destination_warehouse", "item")
+            .prefetch_related("allocations")
+            .filter(source_warehouse_id=warehouse_id, item_id=item_id)
+        )
+
+        for transfer in transfers_out:
+            total_cost = sum(
+                (
+                    allocation.quantity * allocation.unit_cost
+                    for allocation in transfer.allocations.all()
+                ),
+                Decimal("0"),
+            )
+
+            average_cost = (
+                total_cost / transfer.quantity
+                if transfer.quantity > 0
+                else Decimal("0")
+            )
+
+            movements.append({
+                "date": transfer.transfer_date,
+                "type": "TRANSFER_OUT",
+                "reference": transfer.reference,
+                "entry_quantity": Decimal("0"),
+                "exit_quantity": transfer.quantity,
+                "unit_cost": average_cost,
+                "total_cost": total_cost,
+                "sort_id": transfer.id,
+            })
+
+        transfers_in = (
+            StockTransfer.objects
+            .select_related("source_warehouse", "destination_warehouse", "item")
+            .prefetch_related("allocations")
+            .filter(destination_warehouse_id=warehouse_id, item_id=item_id)
+        )
+
+        for transfer in transfers_in:
+            total_cost = sum(
+                (
+                    allocation.quantity * allocation.unit_cost
+                    for allocation in transfer.allocations.all()
+                ),
+                Decimal("0"),
+            )
+
+            average_cost = (
+                total_cost / transfer.quantity
+                if transfer.quantity > 0
+                else Decimal("0")
+            )
+
+            movements.append({
+                "date": transfer.transfer_date,
+                "type": "TRANSFER_IN",
+                "reference": transfer.reference,
+                "entry_quantity": transfer.quantity,
+                "exit_quantity": Decimal("0"),
+                "unit_cost": average_cost,
+                "total_cost": total_cost,
+                "sort_id": transfer.id,
+            })
 
         movements.sort(key=lambda row: (row["date"], row["sort_id"]))
 
