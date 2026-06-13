@@ -39,7 +39,7 @@ export async function exportKardex(warehouseId: number, itemId: number) {
   const link = document.createElement("a");
 
   link.href = url;
-  link.download = "kardex.xlsx";
+  link.download = `kardex_${warehouseId}_${itemId}.xlsx`;
   document.body.appendChild(link);
   link.click();
 

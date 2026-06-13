@@ -611,6 +611,8 @@ class KardexExportView(KardexView):
             output,
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        http_response["Content-Disposition"] = 'attachment; filename="kardex.xlsx"'
+        filename = f"kardex_{request.query_params.get('warehouse')}_{request.query_params.get('item')}.xlsx"
+
+        http_response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
         return http_response
