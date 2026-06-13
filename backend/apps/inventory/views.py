@@ -56,8 +56,6 @@ class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
             entry_date=stock_entry.entry_date,
         )
 
-        self.create_audit_log(stock_entry, "CREATE")
-
 
 class StockExitViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = StockExitSerializer
