@@ -107,19 +107,16 @@ class StockExitSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        tenant = validated_data.get("tenant") or self.context["request"].tenant
         quantity_to_consume = validated_data["quantity"]
 
-        tenant = self.context["request"].tenant
-
-        stock_exit = StockExit.objects.create(
-            tenant=tenant,
-            **validated_data,
-        )
+        stock_exit = StockExit.objects.create(**validated_data)
 
         layers = (
             StockLayer.objects
             .select_for_update()
             .filter(
+                tenant=tenant,
                 warehouse=stock_exit.warehouse,
                 item=stock_exit.item,
                 remaining_quantity__gt=0,
