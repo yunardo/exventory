@@ -73,8 +73,11 @@ class StockExitSerializer(serializers.ModelSerializer):
 
     def get_total_cost(self, obj):
         total = sum(
-            allocation.quantity * allocation.unit_cost
-            for allocation in obj.allocations.all()
+            (
+                allocation.quantity * allocation.unit_cost
+                for allocation in obj.allocations.all()
+            ),
+            Decimal("0"),
         )
         return str(total.quantize(Decimal("0.01")))
 

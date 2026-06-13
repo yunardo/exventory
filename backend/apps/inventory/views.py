@@ -209,8 +209,11 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
             .all()
         ):
             total_cost = sum(
-                allocation.quantity * allocation.unit_cost
-                for allocation in stock_exit.allocations.all()
+                (
+                    allocation.quantity * allocation.unit_cost
+                    for allocation in stock_exit.allocations.all()
+                ),
+                Decimal("0"),
             )
 
             exits.append({
@@ -230,3 +233,92 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
         movements.sort(key=lambda row: row["date"], reverse=True)
 
         return Response(movements)
+
+
+class KardexView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def get(self, request):
+        warehouse_id = request.query_params.get("warehouse")
+        item_id = request.query_params.get("item")
+
+        if not warehouse_id or not item_id:
+            return Response(
+                {"detail": "warehouse and item query params are required."},
+                status=400,
+            )
+
+        movements = []
+
+        entries = (
+            StockEntry.objects
+            .select_related("warehouse", "item")
+            .filter(warehouse_id=warehouse_id, item_id=item_id)
+        )
+
+        for entry in entries:
+            movements.append({
+                "date": entry.entry_date,
+                "type": "ENTRY",
+                "reference": entry.reference,
+                "entry_quantity": entry.quantity,
+                "exit_quantity": Decimal("0"),
+                "unit_cost": entry.unit_cost,
+                "total_cost": entry.quantity * entry.unit_cost,
+                "sort_id": entry.id,
+            })
+
+        exits = (
+            StockExit.objects
+            .select_related("warehouse", "item")
+            .prefetch_related("allocations")
+            .filter(warehouse_id=warehouse_id, item_id=item_id)
+        )
+
+        for stock_exit in exits:
+            total_cost = sum(
+                (
+                    allocation.quantity * allocation.unit_cost
+                    for allocation in stock_exit.allocations.all()
+                ),
+                Decimal("0"),
+            )
+
+            average_exit_cost = (
+                total_cost / stock_exit.quantity
+                if stock_exit.quantity > 0
+                else Decimal("0")
+            )
+
+            movements.append({
+                "date": stock_exit.exit_date,
+                "type": "EXIT",
+                "reference": stock_exit.reference,
+                "entry_quantity": Decimal("0"),
+                "exit_quantity": stock_exit.quantity,
+                "unit_cost": average_exit_cost,
+                "total_cost": total_cost,
+                "sort_id": stock_exit.id,
+            })
+
+        movements.sort(key=lambda row: (row["date"], row["sort_id"]))
+
+        balance = Decimal("0")
+        result = []
+
+        for row in movements:
+            balance += row["entry_quantity"]
+            balance -= row["exit_quantity"]
+
+            result.append({
+                "date": row["date"],
+                "type": row["type"],
+                "reference": row["reference"],
+                "entry_quantity": str(row["entry_quantity"].quantize(Decimal("0.01"))),
+                "exit_quantity": str(row["exit_quantity"].quantize(Decimal("0.01"))),
+                "balance_quantity": str(balance.quantize(Decimal("0.01"))),
+                "unit_cost": str(row["unit_cost"].quantize(Decimal("0.01"))),
+                "total_cost": str(row["total_cost"].quantize(Decimal("0.01"))),
+            })
+
+        return Response(result)

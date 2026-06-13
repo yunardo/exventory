@@ -12,6 +12,7 @@ import { StockExitsPage } from "@/features/stock-exits/StockExitsPage";
 import { CurrentStockPage } from "@/features/current-stock/CurrentStockPage";
 import { RequireTenant } from "./RequireTenant";
 import { StockMovementsPage } from "@/features/stock-movements/StockMovementsPage";
+import { KardexPage } from "@/features/kardex/KardexPage";
 
 export function AppRoutes() {
   return (
@@ -32,6 +33,7 @@ export function AppRoutes() {
               <Route path="/stock-exits" element={<StockExitsPage />} />
               <Route path="/current-stock" element={<CurrentStockPage />} />
               <Route path="/stock-movements" element={<StockMovementsPage />} />
+              <Route path="/kardex" element={<KardexPage />} />
             </Route>
           </Route>
         </Route>
