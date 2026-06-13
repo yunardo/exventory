@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getWarehouses } from "../warehouses/api";
 import { getItems } from "../items/api";
 import { getKardex } from "./api";
+import { exportKardex } from "./api";
 import { useTenant } from "../../context/TenantContext";
 
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,13 @@ export function KardexPage() {
 
             <Button disabled={!canSearch} onClick={handleSearch}>
               Search
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!canSearch}
+              onClick={() => exportKardex(warehouseId, itemId)}
+            >
+              Export Excel
             </Button>
           </div>
         </CardContent>

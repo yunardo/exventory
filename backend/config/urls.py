@@ -29,6 +29,7 @@ from apps.inventory.views import StockMovementHistoryView
 from apps.inventory.views import KardexView
 from apps.inventory.views import InventoryAdjustmentViewSet
 from apps.inventory.views import StockTransferViewSet
+from apps.inventory.views import KardexExportView
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView
@@ -78,6 +79,7 @@ urlpatterns = [
     path("api/dashboard/summary/", DashboardSummaryView.as_view(), name="dashboard-summary"),
     path("api/stock-movements/", StockMovementHistoryView.as_view(), name="stock-movements"),
     path("api/kardex/", KardexView.as_view(), name="kardex"),
+    path("api/kardex/export/", KardexExportView.as_view(), name="kardex-export"),
 
     path("api/", include(router.urls)),
 ]

@@ -17,6 +17,11 @@ from .serializers import InventoryAdjustmentSerializer
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
 
+from io import BytesIO
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = WarehouseSerializer
@@ -542,3 +547,70 @@ class StockTransferViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
             .prefetch_related("allocations")
             .all()
         )
+
+
+class KardexExportView(KardexView):
+    def get(self, request):
+        response = super().get(request)
+
+        if response.status_code != 200:
+            return response
+
+        rows = response.data
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Kardex"
+
+        headers = [
+            "Date",
+            "Type",
+            "Reference",
+            "Entry Qty",
+            "Exit Qty",
+            "Balance Qty",
+            "Unit Cost",
+            "Movement Cost",
+            "Balance Value",
+            "Avg Balance Cost",
+        ]
+
+        ws.append(headers)
+
+        header_fill = PatternFill("solid", fgColor="1E293B")
+        header_font = Font(color="FFFFFF", bold=True)
+
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+
+        for row in rows:
+            ws.append([
+                row["date"],
+                row["type"],
+                row["reference"],
+                row["entry_quantity"],
+                row["exit_quantity"],
+                row["balance_quantity"],
+                row["unit_cost"],
+                row["total_cost"],
+                row["balance_value"],
+                row["average_balance_cost"],
+            ])
+
+        for column_cells in ws.columns:
+            max_length = max(len(str(cell.value or "")) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = max_length + 2
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        http_response = HttpResponse(
+            output,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        http_response["Content-Disposition"] = 'attachment; filename="kardex.xlsx"'
+
+        return http_response
