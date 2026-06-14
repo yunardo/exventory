@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTenant } from "../../context/TenantContext";
+import { canManageCatalog } from "@/auth/roles";
 
 const itemSchema = z.object({
   code: z.string().min(2, "Code must have at least 2 characters"),
@@ -43,6 +44,8 @@ export function ItemsPage() {
   const queryClient = useQueryClient();
   const { tenantSlug } = useTenant();
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const { tenantRole } = useTenant();
+  const canManage = canManageCatalog(tenantRole);
 
   const {
     register,
@@ -133,76 +136,78 @@ export function ItemsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingItem ? "Edit Item" : "New Item"}</CardTitle>
-        </CardHeader>
+      {canManage && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{editingItem ? "Edit Item" : "New Item"}</CardTitle>
+          </CardHeader>
 
-        <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid gap-4 md:grid-cols-4"
-          >
-            <div>
-              <Input placeholder="Code" {...register("code")} />
-              {errors.code && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.code.message}
-                </p>
-              )}
-            </div>
+          <CardContent>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="grid gap-4 md:grid-cols-4"
+            >
+              <div>
+                <Input placeholder="Code" {...register("code")} />
+                {errors.code && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.code.message}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <Input placeholder="Name" {...register("name")} />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
+              <div>
+                <Input placeholder="Name" {...register("name")} />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <Input placeholder="Description" {...register("description")} />
-            </div>
+              <div>
+                <Input placeholder="Description" {...register("description")} />
+              </div>
 
-            <div>
-              <Input placeholder="Unit" {...register("unit")} />
-              {errors.unit && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.unit.message}
-                </p>
-              )}
-            </div>
+              <div>
+                <Input placeholder="Unit" {...register("unit")} />
+                {errors.unit && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.unit.message}
+                  </p>
+                )}
+              </div>
 
-            <div className="flex gap-2 md:col-span-4">
-              <Button
-                type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {editingItem
-                  ? updateMutation.isPending
-                    ? "Updating..."
-                    : "Update"
-                  : createMutation.isPending
-                    ? "Creating..."
-                    : "Create"}
-              </Button>
-
-              {editingItem && (
-                <Button type="button" variant="outline" onClick={handleCancelEdit}>
-                  Cancel
+              <div className="flex gap-2 md:col-span-4">
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {editingItem
+                    ? updateMutation.isPending
+                      ? "Updating..."
+                      : "Update"
+                    : createMutation.isPending
+                      ? "Creating..."
+                      : "Create"}
                 </Button>
-              )}
-            </div>
-          </form>
 
-          {(createMutation.isError || updateMutation.isError) && (
-            <p className="mt-4 text-sm text-red-600">
-              Could not save item.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+                {editingItem && (
+                  <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            {(createMutation.isError || updateMutation.isError) && (
+              <p className="mt-4 text-sm text-red-600">
+                Could not save item.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -244,36 +249,38 @@ export function ItemsPage() {
                       {item.is_active ? "Active" : "Inactive"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setEditingItem(item);
-                            reset({
-                              code: item.code,
-                              name: item.name,
-                              description: item.description ?? "",
-                              unit: item.unit,
-                            });
-                          }}
-                        >
-                          Edit
-                        </Button>
+                      {canManage && (
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingItem(item);
+                              reset({
+                                code: item.code,
+                                name: item.name,
+                                description: item.description ?? "",
+                                unit: item.unit,
+                              });
+                            }}
+                          >
+                            Edit
+                          </Button>
 
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          disabled={deleteMutation.isPending}
-                          onClick={() => {
-                            if (confirm(`Delete item "${item.name}"?`)) {
-                              deleteMutation.mutate(item.id);
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={deleteMutation.isPending}
+                            onClick={() => {
+                              if (confirm(`Delete item "${item.name}"?`)) {
+                                deleteMutation.mutate(item.id);
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

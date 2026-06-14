@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTenant } from "../../context/TenantContext";
+import { canManageCatalog } from "@/auth/roles";
 
 const warehouseSchema = z.object({
   name: z.string().min(2, "Name must have at least 2 characters"),
@@ -41,6 +42,8 @@ export function WarehousesPage() {
   const queryClient = useQueryClient();
   const { tenantSlug } = useTenant();
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
+  const { tenantRole } = useTenant();
+  const canManage = canManageCatalog(tenantRole);
 
   const {
     register,
@@ -120,68 +123,70 @@ export function WarehousesPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingWarehouse ? "Edit Warehouse" : "New Warehouse"}</CardTitle>
-        </CardHeader>
+      {canManage && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{editingWarehouse ? "Edit Warehouse" : "New Warehouse"}</CardTitle>
+          </CardHeader>
 
-        <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid gap-4 md:grid-cols-3"
-          >
-            <div>
-              <Input placeholder="Warehouse name" {...register("name")} />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.name.message}
-                </p>
+          <CardContent>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="grid gap-4 md:grid-cols-3"
+            >
+              <div>
+                <Input placeholder="Warehouse name" {...register("name")} />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Input placeholder="Location" {...register("location")} />
+                {errors.location && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.location.message}
+                  </p>
+                )}
+              </div>
+
+              {editingWarehouse && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditingWarehouse(null);
+                    reset({
+                      name: "",
+                      location: "",
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
               )}
-            </div>
 
-            <div>
-              <Input placeholder="Location" {...register("location")} />
-              {errors.location && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.location.message}
-                </p>
-              )}
-            </div>
-
-            {editingWarehouse && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setEditingWarehouse(null);
-                  reset({
-                    name: "",
-                    location: "",
-                  });
-                }}
-              >
-                Cancel
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {editingWarehouse
+                  ? updateMutation.isPending
+                    ? "Updating..."
+                    : "Update"
+                  : createMutation.isPending
+                    ? "Creating..."
+                    : "Create"}
               </Button>
+            </form>
+
+            {createMutation.isError && (
+              <p className="mt-4 text-sm text-red-600">
+                Could not create warehouse.
+              </p>
             )}
-
-            <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-              {editingWarehouse
-                ? updateMutation.isPending
-                  ? "Updating..."
-                  : "Update"
-                : createMutation.isPending
-                  ? "Creating..."
-                  : "Create"}
-            </Button>
-          </form>
-
-          {createMutation.isError && (
-            <p className="mt-4 text-sm text-red-600">
-              Could not create warehouse.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -224,32 +229,36 @@ export function WarehousesPage() {
                     </TableCell>
 
                     <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingWarehouse(warehouse);
-                          reset({
-                            name: warehouse.name,
-                            location: warehouse.location ?? "",
-                          });
-                        }}
-                      >
-                        Edit
-                      </Button>
+                      {canManage && (
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingWarehouse(warehouse);
+                              reset({
+                                name: warehouse.name,
+                                location: warehouse.location ?? "",
+                              });
+                            }}
+                          >
+                            Edit
+                          </Button>
 
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={deleteMutation.isPending}
-                        onClick={() => {
-                          if (confirm(`Delete warehouse "${warehouse.name}"?`)) {
-                            deleteMutation.mutate(warehouse.id);
-                          }
-                        }}
-                      >
-                        Delete
-                      </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={deleteMutation.isPending}
+                            onClick={() => {
+                              if (confirm(`Delete warehouse "${warehouse.name}"?`)) {
+                                deleteMutation.mutate(warehouse.id);
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -3,11 +3,15 @@ import {
   clearTenantSlug,
   getTenantSlug,
   setTenantSlug,
+  getTenantRole,
+  setTenantRole,
+  clearTenantRole,
 } from "../api/tenantStorage";
 
 type TenantContextValue = {
   tenantSlug: string | null;
-  selectTenant: (slug: string) => void;
+  tenantRole: string | null;
+  selectTenant: (slug: string, role: string) => void;
   clearTenant: () => void;
 };
 
@@ -17,17 +21,25 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [tenantSlug, setTenantSlugState] = useState<string | null>(() =>
     getTenantSlug()
   );
+  const [tenantRole, setTenantRoleState] = useState<string | null>(() =>
+    getTenantRole()
+  );
 
   const value = useMemo<TenantContextValue>(
     () => ({
       tenantSlug,
-      selectTenant: (slug: string) => {
+      tenantRole,
+      selectTenant: (slug: string, role: string) => {
         setTenantSlug(slug);
+        setTenantRole(role);
         setTenantSlugState(slug);
+        setTenantRoleState(role);
       },
       clearTenant: () => {
         clearTenantSlug();
+        clearTenantRole();
         setTenantSlugState(null);
+        setTenantRoleState(null);
       },
     }),
     [tenantSlug]

@@ -11,9 +11,9 @@ export function TenantsPage() {
   const { selectTenant } = useTenant();
   const queryClient = useQueryClient();
 
-function selectWorkspace(slug: string) {
+function selectWorkspace(tenant: Tenant) {
   queryClient.clear();
-  selectTenant(slug);
+  selectTenant(tenant.slug, tenant.role);
   navigate("/dashboard", { replace: true });
 }
 
@@ -33,7 +33,7 @@ function selectWorkspace(slug: string) {
         {tenants.map((tenant) => (
           <button
             key={tenant.id}
-            onClick={() => selectWorkspace(tenant.slug)}
+            onClick={() => selectWorkspace(tenant)}
             className="rounded-2xl bg-white p-6 text-left shadow hover:shadow-md"
           >
             <h2 className="text-lg font-semibold text-slate-900">

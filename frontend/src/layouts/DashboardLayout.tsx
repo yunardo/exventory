@@ -2,43 +2,48 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { logout } from "../api/auth";
 import { useTenant } from "../context/TenantContext";
-
-const navGroups = [
-  {
-    title: "Overview",
-    links: [{ label: "Dashboard", to: "/dashboard" }],
-  },
-  {
-    title: "Inventory",
-    links: [
-      { label: "Current Stock", to: "/current-stock" },
-      { label: "Stock Entries", to: "/stock-entries" },
-      { label: "Stock Exits", to: "/stock-exits" },
-      { label: "Stock Movements", to: "/stock-movements" },
-      { label: "Kardex", to: "/kardex" },
-      { label: "Inventory Adjustments", to: "/inventory-adjustments" },
-      { label: "Stock Transfers", to: "/stock-transfers" },
-      { label: "Inventory Valuation", to: "/inventory-valuation" },
-    ],
-  },
-  {
-    title: "Catalog",
-    links: [
-      { label: "Warehouses", to: "/warehouses" },
-      { label: "Items", to: "/items" },
-    ],
-  },
-  {
-    title: "System",
-    links: [
-      { label: "Audit Logs", to: "/audit-logs" },
-    ],
-  },
-];
+import { canManageAdjustments, canViewAuditLogs } from "@/auth/roles";
 
 export function DashboardLayout() {
+  const { tenantSlug, tenantRole, clearTenant } = useTenant();
+
+  const navGroups = [
+    {
+      title: "Overview",
+      links: [{ label: "Dashboard", to: "/dashboard" }],
+    },
+    {
+      title: "Inventory",
+      links: [
+        { label: "Current Stock", to: "/current-stock" },
+        { label: "Stock Movements", to: "/stock-movements" },
+        { label: "Stock Entries", to: "/stock-entries" },
+        { label: "Stock Exits", to: "/stock-exits" },
+        { label: "Stock Transfers", to: "/stock-transfers" },
+        ...(canManageAdjustments(tenantRole)
+          ? [{ label: "Inventory Adjustments", to: "/inventory-adjustments" }]
+          : []),
+        { label: "Kardex", to: "/kardex" },
+        { label: "Inventory Valuation", to: "/inventory-valuation" },
+      ],
+    },
+    {
+      title: "Catalog",
+      links: [
+        { label: "Warehouses", to: "/warehouses" },
+        { label: "Items", to: "/items" },
+      ],
+    },
+    ...(canViewAuditLogs(tenantRole)
+      ? [
+          {
+            title: "System",
+            links: [{ label: "Audit Logs", to: "/audit-logs" }],
+          },
+        ]
+      : []),
+  ];
   const navigate = useNavigate();
-  const { tenantSlug, clearTenant } = useTenant();
 
   useEffect(() => {
     if (!tenantSlug) {
