@@ -33,7 +33,7 @@ from apps.inventory.views import KardexExportView
 from apps.inventory.views import CurrentStockExportView
 from apps.inventory.views import InventoryValuationView
 from apps.inventory.views import InventoryValuationExportView
-from apps.tenancy.views import MeView, MyTenantsView
+from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
 from apps.tenancy.views import AuthTenantsView
@@ -63,6 +63,11 @@ router.register(
     r"stock-transfers",
     StockTransferViewSet,
     basename="stock-transfers",
+)
+router.register(
+    r"tenant-memberships",
+    TenantMembershipViewSet,
+    basename="tenant-memberships",
 )
 
 urlpatterns = [

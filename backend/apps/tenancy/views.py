@@ -2,9 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
-
-from .models import Membership
+from rest_framework.viewsets import ModelViewSet
 from .serializers import MyTenantSerializer
+from apps.tenancy.permissions import IsTenantMember, HasTenantRole
+from apps.tenancy.models import Membership
+from apps.tenancy.serializers import MembershipSerializer
 
 class AuthTenantsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -77,3 +79,22 @@ class MyTenantsView(APIView):
 
         data = MyTenantSerializer(qs, many=True).data
         return Response(data, status=200)
+
+
+class TenantMembershipViewSet(ModelViewSet):
+    serializer_class = MembershipSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_queryset(self):
+        return (
+            Membership.objects
+            .select_related("user", "tenant")
+            .filter(tenant=self.request.tenant)
+            .order_by("user__username")
+        )
