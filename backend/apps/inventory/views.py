@@ -3,7 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from apps.core.api import TenantRequiredMixin
-from apps.tenancy.permissions import IsTenantMember
+from apps.tenancy.models import Membership
+from apps.tenancy.permissions import IsTenantMember, HasTenantRole
 from apps.core.audit_mixins import AuditCrudMixin
 from .models import Warehouse, Item, StockEntry, StockExit
 from .models import StockLayer, InventoryAdjustment
@@ -25,7 +26,8 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = WarehouseSerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [Membership.Role.OWNER, Membership.Role.ADMIN]
 
     def get_queryset(self):
         # Se evalúa ya dentro del request, con tenant en el contexto ✅
@@ -34,7 +36,8 @@ class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
 
 class ItemViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = ItemSerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [Membership.Role.OWNER, Membership.Role.ADMIN]
 
     def get_queryset(self):
         return Item.objects.all()
@@ -42,7 +45,12 @@ class ItemViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
 
 class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = StockEntrySerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+        Membership.Role.MEMBER,
+    ]
 
     def get_queryset(self):
         return StockEntry.objects.select_related("warehouse", "item").all()
@@ -66,7 +74,12 @@ class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
 
 class StockExitViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = StockExitSerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+        Membership.Role.MEMBER,
+    ]
 
     def get_queryset(self):
         return (
@@ -525,7 +538,8 @@ class KardexView(TenantRequiredMixin, APIView):
 
 class InventoryAdjustmentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = InventoryAdjustmentSerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [Membership.Role.OWNER, Membership.Role.ADMIN]
 
     def get_queryset(self):
         return (
@@ -538,7 +552,12 @@ class InventoryAdjustmentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewS
 
 class StockTransferViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = StockTransferSerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+        Membership.Role.MEMBER,
+    ]
 
     def get_queryset(self):
         return (
