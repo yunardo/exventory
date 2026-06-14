@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Tenant, Membership
+from .models import Tenant, Membership, TenantInvitation
 
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,5 +35,39 @@ class MembershipSerializer(serializers.ModelSerializer):
             "user",
             "username",
             "email",
+            "created_at",
+        ]
+
+
+class TenantInvitationSerializer(serializers.ModelSerializer):
+    invited_by_username = serializers.CharField(
+        source="invited_by.username",
+        read_only=True,
+    )
+    is_expired = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = TenantInvitation
+        fields = [
+            "id",
+            "email",
+            "role",
+            "token",
+            "invited_by",
+            "invited_by_username",
+            "accepted_at",
+            "expires_at",
+            "is_active",
+            "is_expired",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "token",
+            "invited_by",
+            "invited_by_username",
+            "accepted_at",
+            "expires_at",
+            "is_expired",
             "created_at",
         ]

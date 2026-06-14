@@ -36,7 +36,7 @@ from apps.inventory.views import InventoryValuationExportView
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
-from apps.tenancy.views import AuthTenantsView
+from apps.tenancy.views import AuthTenantsView, TenantInvitationViewSet
 
 def health_check(request):
     return JsonResponse({"status": "ok"})
@@ -68,6 +68,11 @@ router.register(
     r"tenant-memberships",
     TenantMembershipViewSet,
     basename="tenant-memberships",
+)
+router.register(
+    r"tenant-invitations",
+    TenantInvitationViewSet,
+    basename="tenant-invitations",
 )
 
 urlpatterns = [

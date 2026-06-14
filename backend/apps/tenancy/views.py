@@ -8,6 +8,8 @@ from apps.tenancy.permissions import IsTenantMember, HasTenantRole
 from apps.tenancy.models import Membership
 from apps.tenancy.serializers import MembershipSerializer
 from rest_framework.exceptions import ValidationError
+from .models import TenantInvitation
+from .serializers import TenantInvitationSerializer
 
 class AuthTenantsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -134,3 +136,28 @@ class TenantMembershipViewSet(ModelViewSet):
                 })
 
         serializer.save()
+
+
+class TenantInvitationViewSet(ModelViewSet):
+    serializer_class = TenantInvitationSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    http_method_names = ["get", "post", "patch", "head", "options"]
+
+    def get_queryset(self):
+        return (
+            TenantInvitation.objects
+            .select_related("tenant", "invited_by")
+            .filter(tenant=self.request.tenant)
+            .order_by("-created_at")
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(
+            tenant=self.request.tenant,
+            invited_by=self.request.user,
+        )
