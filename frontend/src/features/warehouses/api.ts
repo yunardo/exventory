@@ -1,4 +1,5 @@
-import { tenantApiClient } from "../../api/tenantClient";
+import { unwrapPaginatedResponse, type PaginatedResponse } from "@/api/pagination";
+import { tenantApiClient } from "@/api/tenantClient";
 
 export type Warehouse = {
   id: number;
@@ -8,8 +9,11 @@ export type Warehouse = {
 };
 
 export async function getWarehouses() {
-  const response = await tenantApiClient.get<Warehouse[]>("/api/warehouses/");
-  return response.data;
+  const response = await tenantApiClient.get<
+    Warehouse[] | PaginatedResponse<Warehouse>
+  >("/api/warehouses/");
+
+  return unwrapPaginatedResponse(response.data);
 }
 
 export type CreateWarehousePayload = {

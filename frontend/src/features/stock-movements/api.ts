@@ -1,4 +1,5 @@
-import { tenantApiClient } from "../../api/tenantClient";
+import { unwrapPaginatedResponse, type PaginatedResponse } from "@/api/pagination";
+import { tenantApiClient } from "@/api/tenantClient";
 
 export type StockMovement = {
   type:
@@ -19,9 +20,9 @@ export type StockMovement = {
 };
 
 export async function getStockMovements() {
-  const response = await tenantApiClient.get<StockMovement[]>(
-    "/api/stock-movements/"
-  );
+  const response = await tenantApiClient.get<
+    StockMovement[] | PaginatedResponse<StockMovement>
+  >("/api/stock-movements/");
 
-  return response.data;
+  return unwrapPaginatedResponse(response.data);
 }

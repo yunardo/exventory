@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export function AuditLogsPage() {
   const { tenantSlug } = useTenant();
@@ -28,9 +29,10 @@ export function AuditLogsPage() {
   const [methodFilter, setMethodFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(1);
 
   const {
-    data: logs = [],
+    data: auditLogs,
     isLoading,
     isError,
   } = useQuery({
@@ -42,6 +44,7 @@ export function AuditLogsPage() {
       methodFilter,
       dateFrom,
       dateTo,
+      page,
     ],
     queryFn: () =>
       getAuditLogs({
@@ -50,8 +53,14 @@ export function AuditLogsPage() {
         method: methodFilter || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
+        page,
       }),
   });
+
+  const logs = auditLogs?.results ?? [];
+  const count = auditLogs?.count ?? 0;
+  const hasNext = Boolean(auditLogs?.next);
+  const hasPrevious = Boolean(auditLogs?.previous);
 
   const { data: options } = useQuery({
     queryKey: ["audit-log-options", tenantSlug],
@@ -86,7 +95,7 @@ export function AuditLogsPage() {
               <div className="grid gap-4 md:grid-cols-4">
                 <select
                   value={actionFilter}
-                  onChange={(e) => setActionFilter(e.target.value)}
+                  onChange={(e) => {setActionFilter(e.target.value); setPage(1);}}
                   className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="">All actions</option>
@@ -99,7 +108,7 @@ export function AuditLogsPage() {
 
                 <select
                   value={entityFilter}
-                  onChange={(e) => setEntityFilter(e.target.value)}
+                  onChange={(e) => {setEntityFilter(e.target.value); setPage(1);}}
                   className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="">All entities</option>
@@ -112,7 +121,7 @@ export function AuditLogsPage() {
 
                 <select
                   value={methodFilter}
-                  onChange={(e) => setMethodFilter(e.target.value)}
+                  onChange={(e) => {setMethodFilter(e.target.value); setPage(1);}}
                   className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="">All methods</option>
@@ -126,13 +135,13 @@ export function AuditLogsPage() {
                 <Input
                   type="date"
                   value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
+                  onChange={(e) => {setDateFrom(e.target.value); setPage(1);}}
                 />
 
                 <Input
                   type="date"
                   value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
+                  onChange={(e) => {setDateTo(e.target.value); setPage(1);}}
                 />
 
                 <button
@@ -235,6 +244,29 @@ export function AuditLogsPage() {
               </TableBody>
             </Table>
           )}
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Total records: {count}
+            </p>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={!hasPrevious}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                Previous
+              </Button>
+
+              <Button
+                variant="outline"
+                disabled={!hasNext}
+                onClick={() => setPage((current) => current + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </section>

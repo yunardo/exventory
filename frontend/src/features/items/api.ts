@@ -1,4 +1,5 @@
-import { tenantApiClient } from "../../api/tenantClient";
+import { unwrapPaginatedResponse, type PaginatedResponse } from "@/api/pagination";
+import { tenantApiClient } from "@/api/tenantClient";
 
 export type Item = {
   id: number;
@@ -22,8 +23,11 @@ export type UpdateItemPayload = CreateItemPayload & {
 };
 
 export async function getItems() {
-  const response = await tenantApiClient.get<Item[]>("/api/items/");
-  return response.data;
+  const response = await tenantApiClient.get<
+    Item[] | PaginatedResponse<Item>
+  >("/api/items/");
+
+  return unwrapPaginatedResponse(response.data);
 }
 
 export async function createItem(payload: CreateItemPayload) {

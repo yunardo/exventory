@@ -1,4 +1,5 @@
-import { tenantApiClient } from "../../api/tenantClient";
+import { unwrapPaginatedResponse, type PaginatedResponse } from "@/api/pagination";
+import { tenantApiClient } from "@/api/tenantClient";
 
 export type CurrentStock = {
   warehouse_id: number;
@@ -12,8 +13,11 @@ export type CurrentStock = {
 };
 
 export async function getCurrentStock() {
-  const response = await tenantApiClient.get<CurrentStock[]>("/api/current-stock/");
-  return response.data;
+  const response = await tenantApiClient.get<
+    CurrentStock[] | PaginatedResponse<CurrentStock>
+  >("/api/current-stock/");
+
+  return unwrapPaginatedResponse(response.data);
 }
 
 

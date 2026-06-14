@@ -24,12 +24,21 @@ export type AuditLogFilters = {
   method?: string;
   date_from?: string;
   date_to?: string;
+  page?: number;
+  page_size?: number;
 };
 
 export type AuditLogOptions = {
   actions: string[];
   entities: string[];
   methods: string[];
+};
+
+export type PaginatedResponse<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 };
 
 export async function getAuditLogOptions() {
@@ -48,10 +57,12 @@ export async function getAuditLogs(filters: AuditLogFilters = {}) {
   if (filters.method) params.set("method", filters.method);
   if (filters.date_from) params.set("date_from", filters.date_from);
   if (filters.date_to) params.set("date_to", filters.date_to);
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.page_size) params.set("page_size", String(filters.page_size));
 
   const query = params.toString();
 
-  const response = await tenantApiClient.get<AuditLog[]>(
+  const response = await tenantApiClient.get<PaginatedResponse<AuditLog>>(
     query ? `/api/audit-logs/?${query}` : "/api/audit-logs/"
   );
 

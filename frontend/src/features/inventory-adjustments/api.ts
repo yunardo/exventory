@@ -1,4 +1,5 @@
-import { tenantApiClient } from "../../api/tenantClient";
+import { unwrapPaginatedResponse, type PaginatedResponse } from "@/api/pagination";
+import { tenantApiClient } from "@/api/tenantClient";
 
 export type InventoryAdjustment = {
   id: number;
@@ -28,11 +29,11 @@ export type CreateInventoryAdjustmentPayload = {
 };
 
 export async function getInventoryAdjustments() {
-  const response = await tenantApiClient.get<InventoryAdjustment[]>(
-    "/api/inventory-adjustments/"
-  );
+  const response = await tenantApiClient.get<
+    InventoryAdjustment[] | PaginatedResponse<InventoryAdjustment>
+  >("/api/inventory-adjustments/");
 
-  return response.data;
+  return unwrapPaginatedResponse(response.data);
 }
 
 export async function createInventoryAdjustment(
