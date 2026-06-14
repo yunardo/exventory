@@ -16,6 +16,7 @@ import { KardexPage } from "@/features/kardex/KardexPage";
 import { InventoryAdjustmentsPage } from "@/features/inventory-adjustments/InventoryAdjustmentsPage";
 import { StockTransfersPage } from "@/features/stock-transfers/StockTransfersPage";
 import { InventoryValuationPage } from "@/features/inventory-valuation/InventoryValuationPage";
+import { AuditLogsPage } from "@/features/audit-logs/AuditLogsPage";
 
 export function AppRoutes() {
   return (
@@ -40,6 +41,7 @@ export function AppRoutes() {
               <Route path="/inventory-adjustments" element={<InventoryAdjustmentsPage />} />
               <Route path="/stock-transfers" element={<StockTransfersPage />} />
               <Route path="/inventory-valuation" element={<InventoryValuationPage />} />
+              <Route path="/audit-logs" element={<AuditLogsPage />} />
             </Route>
           </Route>
         </Route>

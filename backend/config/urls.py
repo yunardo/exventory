@@ -35,7 +35,7 @@ from apps.inventory.views import InventoryValuationView
 from apps.inventory.views import InventoryValuationExportView
 from apps.tenancy.views import MeView, MyTenantsView
 from apps.tenancy.auth_views import TenantTokenObtainPairView
-from apps.core.views import AuditLogViewSet, AuthMeView
+from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
 from apps.tenancy.views import AuthTenantsView
 
 def health_check(request):
@@ -86,6 +86,8 @@ urlpatterns = [
     path("api/current-stock/export/", CurrentStockExportView.as_view(), name="current-stock-export"),
     path("api/inventory-valuation/", InventoryValuationView.as_view(), name="inventory-valuation"),
     path("api/inventory-valuation/export/", InventoryValuationExportView.as_view(), name="inventory-valuation-export"),
+
+    path("audit-logs/options/", AuditLogOptionsView.as_view(), name="audit-log-options"),
 
     path("api/", include(router.urls)),
 ]

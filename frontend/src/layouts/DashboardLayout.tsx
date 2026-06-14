@@ -28,6 +28,12 @@ const navGroups = [
       { label: "Items", to: "/items" },
     ],
   },
+  {
+    title: "System",
+    links: [
+      { label: "Audit Logs", to: "/audit-logs" },
+    ],
+  },
 ];
 
 export function DashboardLayout() {
