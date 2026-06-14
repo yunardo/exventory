@@ -111,6 +111,8 @@ REST_FRAMEWORK = {
         "tenant_expensive": "60/min",           # total por tenant
         "tenant_user_expensive": "20/min",      # por user por tenant
     },
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
 }
 
 LOGGING = {
