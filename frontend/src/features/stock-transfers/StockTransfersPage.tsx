@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { canCreateStockMovement } from "@/auth/roles";
 
 const transferSchema = z
   .object({
@@ -52,8 +53,9 @@ type TransferFormInput = z.input<typeof transferSchema>;
 type TransferFormValues = z.output<typeof transferSchema>;
 
 export function StockTransfersPage() {
-  const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
+  const { tenantSlug, tenantRole } = useTenant();
+  const canCreate = canCreateStockMovement(tenantRole);
 
   const {
     register,
@@ -148,6 +150,7 @@ export function StockTransfersPage() {
         </p>
       </div>
 
+      {canCreate && (
       <Card>
         <CardHeader>
           <CardTitle>New Transfer</CardTitle>
@@ -261,6 +264,7 @@ export function StockTransfersPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       <Card>
         <CardHeader>

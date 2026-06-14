@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTenant } from "../../context/TenantContext";
+import { canCreateStockMovement } from "@/auth/roles";
 
 const stockEntrySchema = z.object({
   warehouse: z.coerce.number().min(1, "Warehouse is required"),
@@ -40,7 +41,8 @@ type StockEntryFormValues = z.output<typeof stockEntrySchema>;
 
 export function StockEntriesPage() {
   const queryClient = useQueryClient();
-  const { tenantSlug } = useTenant();
+  const { tenantSlug, tenantRole } = useTenant();
+  const canCreate = canCreateStockMovement(tenantRole);
 
   const {
     register,
@@ -111,103 +113,105 @@ export function StockEntriesPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>New Stock Entry</CardTitle>
-        </CardHeader>
+      {canCreate && (
+        <Card>
+          <CardHeader>
+            <CardTitle>New Stock Entry</CardTitle>
+          </CardHeader>
 
-        <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid gap-4 md:grid-cols-3"
-          >
-            <div>
-              <select
-                {...register("warehouse")}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value={0}>Select warehouse</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </option>
-                ))}
-              </select>
-              {errors.warehouse && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.warehouse.message}
-                </p>
-              )}
-            </div>
+          <CardContent>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="grid gap-4 md:grid-cols-3"
+            >
+              <div>
+                <select
+                  {...register("warehouse")}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value={0}>Select warehouse</option>
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.warehouse && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.warehouse.message}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <select
-                {...register("item")}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value={0}>Select item</option>
-                {items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.code} - {item.name}
-                  </option>
-                ))}
-              </select>
-              {errors.item && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.item.message}
-                </p>
-              )}
-            </div>
+              <div>
+                <select
+                  {...register("item")}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value={0}>Select item</option>
+                  {items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.code} - {item.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.item && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.item.message}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <Input placeholder="Quantity" {...register("quantity")} />
-              {errors.quantity && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.quantity.message}
-                </p>
-              )}
-            </div>
+              <div>
+                <Input placeholder="Quantity" {...register("quantity")} />
+                {errors.quantity && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.quantity.message}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <Input placeholder="Unit cost" {...register("unit_cost")} />
-              {errors.unit_cost && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.unit_cost.message}
-                </p>
-              )}
-            </div>
+              <div>
+                <Input placeholder="Unit cost" {...register("unit_cost")} />
+                {errors.unit_cost && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.unit_cost.message}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <Input placeholder="Reference" {...register("reference")} />
-            </div>
+              <div>
+                <Input placeholder="Reference" {...register("reference")} />
+              </div>
 
-            <div>
-              <Input type="date" {...register("entry_date")} />
-              {errors.entry_date && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.entry_date.message}
-                </p>
-              )}
-            </div>
+              <div>
+                <Input type="date" {...register("entry_date")} />
+                {errors.entry_date && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.entry_date.message}
+                  </p>
+                )}
+              </div>
 
-            <div className="md:col-span-3">
-              <Input placeholder="Notes" {...register("notes")} />
-            </div>
+              <div className="md:col-span-3">
+                <Input placeholder="Notes" {...register("notes")} />
+              </div>
 
-            <div className="md:col-span-3">
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creating..." : "Create Entry"}
-              </Button>
-            </div>
-          </form>
+              <div className="md:col-span-3">
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Creating..." : "Create Entry"}
+                </Button>
+              </div>
+            </form>
 
-          {createMutation.isError && (
-            <p className="mt-4 text-sm text-red-600">
-              Could not create stock entry.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            {createMutation.isError && (
+              <p className="mt-4 text-sm text-red-600">
+                Could not create stock entry.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCurrentStock } from "../current-stock/api";
+import { canManageAdjustments } from "@/auth/roles";
 
 const adjustmentSchema = z
   .object({
@@ -54,8 +55,9 @@ type AdjustmentFormInput = z.input<typeof adjustmentSchema>;
 type AdjustmentFormValues = z.output<typeof adjustmentSchema>;
 
 export function InventoryAdjustmentsPage() {
-  const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
+    const { tenantSlug, tenantRole } = useTenant();
+    const canManage = canManageAdjustments(tenantRole);
 
   const {
     register,
@@ -159,124 +161,126 @@ export function InventoryAdjustmentsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>New Adjustment</CardTitle>
-        </CardHeader>
+      {canManage && (
+        <Card>
+          <CardHeader>
+            <CardTitle>New Adjustment</CardTitle>
+          </CardHeader>
 
-        <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid gap-4 md:grid-cols-3"
-          >
-            <div>
-              <select
-                {...register("warehouse")}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value={0}>Select warehouse</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </option>
-                ))}
-              </select>
-              {errors.warehouse && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.warehouse.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <select
-                {...register("item")}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value={0}>Select item</option>
-                {items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.code} - {item.name}
-                  </option>
-                ))}
-              </select>
-              {errors.item && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.item.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <select
-                {...register("adjustment_type")}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="POSITIVE">Positive adjustment</option>
-                <option value="NEGATIVE">Negative adjustment</option>
-              </select>
-            </div>
-
-            <div>
-              <Input placeholder="Quantity" {...register("quantity")} />
-              {adjustmentType === "NEGATIVE" &&
-                selectedWarehouse > 0 &&
-                selectedItem > 0 && (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Available stock: {selectedStock?.quantity ?? "0.00"}
-                  </p>
-                )}
-              {errors.quantity && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.quantity.message}
-                </p>
-              )}
-            </div>
-
-            {adjustmentType === "POSITIVE" && (
+          <CardContent>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="grid gap-4 md:grid-cols-3"
+            >
               <div>
-                <Input placeholder="Unit cost" {...register("unit_cost")} />
-                {errors.unit_cost && (
+                <select
+                  {...register("warehouse")}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value={0}>Select warehouse</option>
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.warehouse && (
                   <p className="mt-1 text-sm text-red-600">
-                    {errors.unit_cost.message}
+                    {errors.warehouse.message}
                   </p>
                 )}
               </div>
-            )}
 
-            <div>
-              <Input placeholder="Reference" {...register("reference")} />
-            </div>
+              <div>
+                <select
+                  {...register("item")}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value={0}>Select item</option>
+                  {items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.code} - {item.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.item && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.item.message}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <Input type="date" {...register("adjustment_date")} />
-              {errors.adjustment_date && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.adjustment_date.message}
-                </p>
+              <div>
+                <select
+                  {...register("adjustment_type")}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="POSITIVE">Positive adjustment</option>
+                  <option value="NEGATIVE">Negative adjustment</option>
+                </select>
+              </div>
+
+              <div>
+                <Input placeholder="Quantity" {...register("quantity")} />
+                {adjustmentType === "NEGATIVE" &&
+                  selectedWarehouse > 0 &&
+                  selectedItem > 0 && (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Available stock: {selectedStock?.quantity ?? "0.00"}
+                    </p>
+                  )}
+                {errors.quantity && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.quantity.message}
+                  </p>
+                )}
+              </div>
+
+              {adjustmentType === "POSITIVE" && (
+                <div>
+                  <Input placeholder="Unit cost" {...register("unit_cost")} />
+                  {errors.unit_cost && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.unit_cost.message}
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
 
-            <div className="md:col-span-2">
-              <Input placeholder="Reason" {...register("reason")} />
-            </div>
+              <div>
+                <Input placeholder="Reference" {...register("reference")} />
+              </div>
 
-            <div className="md:col-span-3">
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending
-                  ? "Creating..."
-                  : "Create Adjustment"}
-              </Button>
-            </div>
-          </form>
+              <div>
+                <Input type="date" {...register("adjustment_date")} />
+                {errors.adjustment_date && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.adjustment_date.message}
+                  </p>
+                )}
+              </div>
 
-          {createMutation.isError && (
-            <p className="mt-4 text-sm text-red-600">
-              Could not create inventory adjustment.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+              <div className="md:col-span-2">
+                <Input placeholder="Reason" {...register("reason")} />
+              </div>
+
+              <div className="md:col-span-3">
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending
+                    ? "Creating..."
+                    : "Create Adjustment"}
+                </Button>
+              </div>
+            </form>
+
+            {createMutation.isError && (
+              <p className="mt-4 text-sm text-red-600">
+                Could not create inventory adjustment.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

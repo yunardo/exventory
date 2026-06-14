@@ -17,6 +17,7 @@ import { InventoryAdjustmentsPage } from "@/features/inventory-adjustments/Inven
 import { StockTransfersPage } from "@/features/stock-transfers/StockTransfersPage";
 import { InventoryValuationPage } from "@/features/inventory-valuation/InventoryValuationPage";
 import { AuditLogsPage } from "@/features/audit-logs/AuditLogsPage";
+import { RequireRole } from "./RequireRole";
 
 export function AppRoutes() {
   return (
@@ -35,13 +36,19 @@ export function AppRoutes() {
               <Route path="/items" element={<ItemsPage />} />
               <Route path="/stock-entries" element={<StockEntriesPage />} />
               <Route path="/stock-exits" element={<StockExitsPage />} />
+              <Route path="/stock-transfers" element={<StockTransfersPage />} />
               <Route path="/current-stock" element={<CurrentStockPage />} />
               <Route path="/stock-movements" element={<StockMovementsPage />} />
               <Route path="/kardex" element={<KardexPage />} />
-              <Route path="/inventory-adjustments" element={<InventoryAdjustmentsPage />} />
-              <Route path="/stock-transfers" element={<StockTransfersPage />} />
               <Route path="/inventory-valuation" element={<InventoryValuationPage />} />
-              <Route path="/audit-logs" element={<AuditLogsPage />} />
+
+              <Route element={<RequireRole allowedRoles={["owner", "admin"]} />}>
+                <Route
+                  path="/inventory-adjustments"
+                  element={<InventoryAdjustmentsPage />}
+                />
+                <Route path="/audit-logs" element={<AuditLogsPage />} />
+              </Route>
             </Route>
           </Route>
         </Route>
