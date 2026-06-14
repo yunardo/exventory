@@ -27,6 +27,15 @@ class AuditLogViewSet(TenantRequiredMixin, ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = AuditLog.objects.select_related("user").all()
 
+        date_from = self.request.query_params.get("date_from")
+        date_to = self.request.query_params.get("date_to")
+
+        if date_from:
+            queryset = queryset.filter(created_at__date__gte=date_from)
+
+        if date_to:
+            queryset = queryset.filter(created_at__date__lte=date_to)
+
         action = self.request.query_params.get("action")
         entity = self.request.query_params.get("entity")
         method = self.request.query_params.get("method")

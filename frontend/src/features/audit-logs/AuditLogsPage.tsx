@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 
 export function AuditLogsPage() {
   const { tenantSlug } = useTenant();
@@ -25,6 +26,8 @@ export function AuditLogsPage() {
   const [actionFilter, setActionFilter] = useState("");
   const [entityFilter, setEntityFilter] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const {
     data: logs = [],
@@ -37,12 +40,16 @@ export function AuditLogsPage() {
       actionFilter,
       entityFilter,
       methodFilter,
+      dateFrom,
+      dateTo,
     ],
     queryFn: () =>
       getAuditLogs({
         action: actionFilter || undefined,
         entity: entityFilter || undefined,
         method: methodFilter || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
       }),
   });
 
@@ -116,6 +123,18 @@ export function AuditLogsPage() {
                   ))}
                 </select>
 
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+
                 <button
                   type="button"
                   className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold"
@@ -123,6 +142,8 @@ export function AuditLogsPage() {
                     setActionFilter("");
                     setEntityFilter("");
                     setMethodFilter("");
+                    setDateFrom("");
+                    setDateTo("");
                   }}
                 >
                   Clear filters

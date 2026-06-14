@@ -22,6 +22,8 @@ export type AuditLogFilters = {
   action?: string;
   entity?: string;
   method?: string;
+  date_from?: string;
+  date_to?: string;
 };
 
 export type AuditLogOptions = {
@@ -44,6 +46,8 @@ export async function getAuditLogs(filters: AuditLogFilters = {}) {
   if (filters.action) params.set("action", filters.action);
   if (filters.entity) params.set("entity", filters.entity);
   if (filters.method) params.set("method", filters.method);
+  if (filters.date_from) params.set("date_from", filters.date_from);
+  if (filters.date_to) params.set("date_to", filters.date_to);
 
   const query = params.toString();
 
