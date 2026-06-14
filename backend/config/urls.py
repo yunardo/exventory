@@ -87,7 +87,7 @@ urlpatterns = [
     path("api/inventory-valuation/", InventoryValuationView.as_view(), name="inventory-valuation"),
     path("api/inventory-valuation/export/", InventoryValuationExportView.as_view(), name="inventory-valuation-export"),
 
-    path("audit-logs/options/", AuditLogOptionsView.as_view(), name="audit-log-options"),
+    path("api/audit-logs/options/", AuditLogOptionsView.as_view(), name="audit-log-options"),
 
     path("api/", include(router.urls)),
 ]
