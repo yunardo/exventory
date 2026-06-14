@@ -7,6 +7,7 @@ from .serializers import MyTenantSerializer
 from apps.tenancy.permissions import IsTenantMember, HasTenantRole
 from apps.tenancy.models import Membership
 from apps.tenancy.serializers import MembershipSerializer
+from rest_framework.exceptions import ValidationError
 
 class AuthTenantsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -98,3 +99,38 @@ class TenantMembershipViewSet(ModelViewSet):
             .filter(tenant=self.request.tenant)
             .order_by("user__username")
         )
+    
+    def perform_update(self, serializer):
+        instance = self.get_object()
+
+        new_role = serializer.validated_data.get("role", instance.role)
+        new_is_active = serializer.validated_data.get("is_active", instance.is_active)
+
+        is_current_admin_role = instance.role in [
+            Membership.Role.OWNER,
+            Membership.Role.ADMIN,
+        ]
+
+        would_lose_admin_role = new_role not in [
+            Membership.Role.OWNER,
+            Membership.Role.ADMIN,
+        ]
+
+        would_be_inactive = new_is_active is False
+
+        if is_current_admin_role and (would_lose_admin_role or would_be_inactive):
+            active_admins = Membership.objects.filter(
+                tenant=instance.tenant,
+                is_active=True,
+                role__in=[
+                    Membership.Role.OWNER,
+                    Membership.Role.ADMIN,
+                ],
+            ).exclude(id=instance.id)
+
+            if not active_admins.exists():
+                raise ValidationError({
+                    "detail": "A tenant must have at least one active owner or admin."
+                })
+
+        serializer.save()

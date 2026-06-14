@@ -18,6 +18,7 @@ import { StockTransfersPage } from "@/features/stock-transfers/StockTransfersPag
 import { InventoryValuationPage } from "@/features/inventory-valuation/InventoryValuationPage";
 import { AuditLogsPage } from "@/features/audit-logs/AuditLogsPage";
 import { RequireRole } from "./RequireRole";
+import { TenantMembershipsPage } from "@/features/tenant-memberships/TenantMembershipsPage";
 
 export function AppRoutes() {
   return (
@@ -43,10 +44,8 @@ export function AppRoutes() {
               <Route path="/inventory-valuation" element={<InventoryValuationPage />} />
 
               <Route element={<RequireRole allowedRoles={["owner", "admin"]} />}>
-                <Route
-                  path="/inventory-adjustments"
-                  element={<InventoryAdjustmentsPage />}
-                />
+                <Route path="/tenant-memberships" element={<TenantMembershipsPage />} />
+                <Route path="/inventory-adjustments" element={<InventoryAdjustmentsPage />} />
                 <Route path="/audit-logs" element={<AuditLogsPage />} />
               </Route>
             </Route>
