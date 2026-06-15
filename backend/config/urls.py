@@ -37,6 +37,7 @@ from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
 from apps.tenancy.views import AuthTenantsView, TenantInvitationViewSet
+from apps.tenancy.views import AcceptTenantInvitationView
 
 def health_check(request):
     return JsonResponse({"status": "ok"})
@@ -82,6 +83,11 @@ urlpatterns = [
 
     path("api/auth/login/", TenantTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path(
+        "api/auth/invitations/accept/",
+        AcceptTenantInvitationView.as_view(),
+        name="accept-tenant-invitation",
+    ),
 
     path("api/me/", MeView.as_view(), name="me"),
     path("api/my-tenants/", MyTenantsView.as_view(), name="my_tenants"),

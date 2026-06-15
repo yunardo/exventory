@@ -23,6 +23,7 @@ class ResolveTenantFromSubdomainMiddleware(MiddlewareMixin):
             "/api/auth/refresh/",
             "/api/auth/me/",
             "/api/auth/tenants/",
+            "/api/auth/invitations/accept/",
         )
 
         if any(request.path.startswith(path) for path in global_paths):

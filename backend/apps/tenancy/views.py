@@ -5,11 +5,14 @@ from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import ModelViewSet
 from .serializers import MyTenantSerializer
 from apps.tenancy.permissions import IsTenantMember, HasTenantRole
-from apps.tenancy.models import Membership
+from apps.tenancy.models import Membership, TenantInvitation
 from apps.tenancy.serializers import MembershipSerializer
 from rest_framework.exceptions import ValidationError
 from .models import TenantInvitation
 from .serializers import TenantInvitationSerializer
+
+from django.utils import timezone
+from rest_framework import status
 
 class AuthTenantsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -161,3 +164,78 @@ class TenantInvitationViewSet(ModelViewSet):
             tenant=self.request.tenant,
             invited_by=self.request.user,
         )
+
+
+class AcceptTenantInvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        token = request.data.get("token")
+
+        if not token:
+            return Response(
+                {"detail": "Token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invitation = (
+            TenantInvitation.objects
+            .select_related("tenant")
+            .filter(token=token)
+            .first()
+        )
+
+        if not invitation:
+            return Response(
+                {"detail": "Invitation not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not invitation.is_active:
+            return Response(
+                {"detail": "Invitation is inactive."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if invitation.accepted_at:
+            return Response(
+                {"detail": "Invitation has already been accepted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if invitation.is_expired:
+            return Response(
+                {"detail": "Invitation has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        membership, created = Membership.objects.get_or_create(
+            tenant=invitation.tenant,
+            user=request.user,
+            defaults={
+                "role": invitation.role,
+                "is_active": True,
+            },
+        )
+
+        if not created:
+            membership.role = invitation.role
+            membership.is_active = True
+            membership.save(update_fields=["role", "is_active"])
+
+        invitation.accepted_at = timezone.now()
+        invitation.is_active = False
+        invitation.save(update_fields=["accepted_at", "is_active"])
+
+        return Response({
+            "detail": "Invitation accepted.",
+            "tenant": {
+                "id": invitation.tenant.id,
+                "slug": invitation.tenant.slug,
+                "name": invitation.tenant.name,
+            },
+            "membership": {
+                "role": membership.role,
+                "is_active": membership.is_active,
+            },
+        })

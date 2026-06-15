@@ -19,6 +19,7 @@ import { InventoryValuationPage } from "@/features/inventory-valuation/Inventory
 import { AuditLogsPage } from "@/features/audit-logs/AuditLogsPage";
 import { RequireRole } from "./RequireRole";
 import { TenantMembershipsPage } from "@/features/tenant-memberships/TenantMembershipsPage";
+import { AcceptInvitationPage } from "@/features/invitations/AcceptInvitationPage";
 
 export function AppRoutes() {
   return (
@@ -28,6 +29,7 @@ export function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
           <Route path="/tenants" element={<TenantsPage />} />
 
           <Route element={<RequireTenant />}>

@@ -20,6 +20,44 @@ export type UpdateTenantMembershipPayload = {
   is_active?: boolean;
 };
 
+export type TenantInvitation = {
+  id: number;
+  email: string;
+  role: "owner" | "admin" | "member" | "viewer";
+  token: string;
+  invited_by: number | null;
+  invited_by_username: string | null;
+  accepted_at: string | null;
+  expires_at: string;
+  is_active: boolean;
+  is_expired: boolean;
+  created_at: string;
+};
+
+export type CreateTenantInvitationPayload = {
+  email: string;
+  role: "owner" | "admin" | "member" | "viewer";
+};
+
+export async function getTenantInvitations() {
+  const response = await tenantApiClient.get<
+    TenantInvitation[] | PaginatedResponse<TenantInvitation>
+  >("/api/tenant-invitations/");
+
+  return unwrapPaginatedResponse(response.data);
+}
+
+export async function createTenantInvitation(
+  payload: CreateTenantInvitationPayload
+) {
+  const response = await tenantApiClient.post<TenantInvitation>(
+    "/api/tenant-invitations/",
+    payload
+  );
+
+  return response.data;
+}
+
 export async function getTenantMemberships() {
   const response = await tenantApiClient.get<
     TenantMembership[] | PaginatedResponse<TenantMembership>
