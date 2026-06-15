@@ -5,6 +5,8 @@ import {
   createTenantInvitation,
   getTenantInvitations,
   getTenantMemberships,
+  resendInvitation,
+  revokeInvitation,
   updateTenantMembership,
   type TenantMembership,
 } from "./api";
@@ -85,6 +87,30 @@ export function TenantMembershipsPage() {
     },
     onError: () => {
       setError("Could not create invitation.");
+    },
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: revokeInvitation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-invitations", tenantSlug],
+      });
+    },
+    onError: () => {
+      setError("Could not revoke invitation.");
+    },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: resendInvitation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-invitations", tenantSlug],
+      });
+    },
+    onError: () => {
+      setError("Could not renew invitation.");
     },
   });
 
@@ -279,20 +305,48 @@ export function TenantMembershipsPage() {
                         {invitation.token}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            await navigator.clipboard.writeText(inviteLink);
-                            setCopiedInvitationId(invitation.id);
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(inviteLink);
+                              setCopiedInvitationId(invitation.id);
 
-                            setTimeout(() => {
-                              setCopiedInvitationId(null);
-                            }, 2000);
-                          }}
-                        >
-                          {copiedInvitationId === invitation.id ? "Copied!" : "Copy link"}
-                        </Button>
+                              setTimeout(() => {
+                                setCopiedInvitationId(null);
+                              }, 2000);
+                            }}
+                          >
+                            {copiedInvitationId === invitation.id ? "Copied!" : "Copy link"}
+                          </Button>
+
+                          {!invitation.accepted_at && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={resendMutation.isPending}
+                                onClick={() => resendMutation.mutate(invitation.id)}
+                              >
+                                Renew
+                              </Button>
+
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                disabled={revokeMutation.isPending}
+                                onClick={() => {
+                                  if (confirm(`Revoke invitation for ${invitation.email}?`)) {
+                                    revokeMutation.mutate(invitation.id);
+                                  }
+                                }}
+                              >
+                                Revoke
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

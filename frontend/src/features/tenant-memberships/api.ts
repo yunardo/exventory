@@ -78,3 +78,19 @@ export async function updateTenantMembership(
 
   return response.data;
 }
+
+export async function revokeInvitation(id: number) {
+  const response = await tenantApiClient.post(
+    `/api/tenant-invitations/${id}/revoke/`
+  );
+
+  return response.data;
+}
+
+export async function resendInvitation(id: number) {
+  const response = await tenantApiClient.post(
+    `/api/tenant-invitations/${id}/resend/`
+  );
+
+  return response.data;
+}
