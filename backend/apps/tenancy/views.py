@@ -13,6 +13,8 @@ from .serializers import TenantInvitationSerializer
 
 from django.utils import timezone
 from rest_framework import status
+from datetime import timedelta
+from rest_framework.decorators import action
 
 class AuthTenantsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -164,6 +166,33 @@ class TenantInvitationViewSet(ModelViewSet):
             tenant=self.request.tenant,
             invited_by=self.request.user,
         )
+    
+    @action(detail=True, methods=["post"])
+    def revoke(self, request, pk=None):
+        invitation = self.get_object()
+        invitation.is_active = False
+        invitation.save(update_fields=["is_active"])
+
+        return Response({"detail": "Invitation revoked."})
+
+
+    @action(detail=True, methods=["post"])
+    def resend(self, request, pk=None):
+        invitation = self.get_object()
+
+        invitation.is_active = True
+        invitation.accepted_at = None
+        invitation.expires_at = timezone.now() + timedelta(days=7)
+
+        invitation.save(
+            update_fields=[
+                "is_active",
+                "accepted_at",
+                "expires_at",
+            ]
+        )
+
+        return Response({"detail": "Invitation renewed."})
 
 
 class AcceptTenantInvitationView(APIView):

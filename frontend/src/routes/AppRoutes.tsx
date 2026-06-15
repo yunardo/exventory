@@ -20,6 +20,7 @@ import { AuditLogsPage } from "@/features/audit-logs/AuditLogsPage";
 import { RequireRole } from "./RequireRole";
 import { TenantMembershipsPage } from "@/features/tenant-memberships/TenantMembershipsPage";
 import { AcceptInvitationPage } from "@/features/invitations/AcceptInvitationPage";
+import { TenantInvitationsPage } from "@/features/tenant-memberships/TenantInvitationsPage";
 
 export function AppRoutes() {
   return (
@@ -49,6 +50,7 @@ export function AppRoutes() {
                 <Route path="/tenant-memberships" element={<TenantMembershipsPage />} />
                 <Route path="/inventory-adjustments" element={<InventoryAdjustmentsPage />} />
                 <Route path="/audit-logs" element={<AuditLogsPage />} />
+                <Route path="/tenant-invitations" element={<TenantInvitationsPage />} />
               </Route>
             </Route>
           </Route>
