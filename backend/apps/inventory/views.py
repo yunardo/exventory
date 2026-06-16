@@ -23,6 +23,8 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
+from apps.core.excel import add_tenant_report_header
+
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = WarehouseSerializer
@@ -594,6 +596,8 @@ class KardexExportView(KardexView):
             "Avg Balance Cost",
         ]
 
+        add_tenant_report_header(ws, request.tenant)
+
         ws.append(headers)
 
         header_fill = PatternFill("solid", fgColor="1E293B")
@@ -658,6 +662,8 @@ class CurrentStockExportView(CurrentStockView):
             "Average Cost",
             "Total Cost",
         ]
+
+        add_tenant_report_header(ws, request.tenant)
 
         ws.append(headers)
 
@@ -757,6 +763,8 @@ class InventoryValuationExportView(InventoryValuationView):
             "Warehouse",
             "Inventory Value",
         ]
+
+        add_tenant_report_header(ws, request.tenant)
 
         ws.append(headers)
 
