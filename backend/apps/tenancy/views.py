@@ -9,12 +9,14 @@ from apps.tenancy.models import Membership, TenantInvitation
 from apps.tenancy.serializers import MembershipSerializer
 from rest_framework.exceptions import ValidationError
 from .models import TenantInvitation
-from .serializers import TenantInvitationSerializer
+from .serializers import TenantInvitationSerializer, TenantSettingsSerializer
 
 from django.utils import timezone
 from rest_framework import status
 from datetime import timedelta
 from rest_framework.decorators import action
+from django.conf import settings
+from django.core.mail import send_mail
 
 class AuthTenantsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -162,9 +164,30 @@ class TenantInvitationViewSet(ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(
+        invitation = serializer.save(
             tenant=self.request.tenant,
             invited_by=self.request.user,
+        )
+
+        invite_link = (
+            f"{settings.FRONTEND_APP_URL}"
+            f"/accept-invitation?token={invitation.token}"
+        )
+
+        subject = f"You have been invited to {self.request.tenant.name}"
+
+        message = (
+            f"You have been invited to join {self.request.tenant.name} on Exventory.\n\n"
+            f"Accept your invitation here:\n{invite_link}\n\n"
+            f"This invitation expires at {invitation.expires_at}."
+        )
+
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[invitation.email],
+            fail_silently=False,
         )
     
     @action(detail=True, methods=["post"])
@@ -190,6 +213,23 @@ class TenantInvitationViewSet(ModelViewSet):
                 "accepted_at",
                 "expires_at",
             ]
+        )
+
+        invite_link = (
+            f"{settings.FRONTEND_APP_URL}"
+            f"/accept-invitation?token={invitation.token}"
+        )
+
+        send_mail(
+            subject=f"Your invitation to {request.tenant.name} has been renewed",
+            message=(
+                f"Your invitation to join {request.tenant.name} on Exventory has been renewed.\n\n"
+                f"Accept your invitation here:\n{invite_link}\n\n"
+                f"This invitation expires at {invitation.expires_at}."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[invitation.email],
+            fail_silently=False,
         )
 
         return Response({"detail": "Invitation renewed."})
@@ -268,3 +308,31 @@ class AcceptTenantInvitationView(APIView):
                 "is_active": membership.is_active,
             },
         })
+
+
+class TenantSettingsView(APIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsTenantMember,
+        HasTenantRole,
+    ]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    def get(self, request):
+        serializer = TenantSettingsSerializer(request.tenant)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        serializer = TenantSettingsSerializer(
+            request.tenant,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)

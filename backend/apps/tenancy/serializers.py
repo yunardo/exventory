@@ -71,3 +71,25 @@ class TenantInvitationSerializer(serializers.ModelSerializer):
             "is_expired",
             "created_at",
         ]
+
+
+class TenantSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tenant
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "company_name",
+            "tax_id",
+            "phone",
+            "address",
+            "currency_code",
+            "timezone",
+            "is_active",
+        ]
+        read_only_fields = [
+            "id",
+            "slug",
+            "is_active",
+        ]

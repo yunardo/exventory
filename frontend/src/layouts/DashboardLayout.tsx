@@ -39,8 +39,17 @@ export function DashboardLayout() {
           {
             title: "System",
             links: [
-              { label: "Audit Logs", to: "/audit-logs" },
               { label: "Tenant Users", to: "/tenant-memberships" },
+              { label: "Invitations", to: "/tenant-invitations" },
+              { label: "Audit Logs", to: "/audit-logs" },
+            ],
+          },
+          {
+            title: "Settings",
+            links: [
+              { label: "Tenant Users", to: "/tenant-memberships" },
+              { label: "Invitations", to: "/tenant-invitations" },
+              { label: "Audit Logs", to: "/audit-logs" },
             ],
           },
         ]

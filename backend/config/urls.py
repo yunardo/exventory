@@ -37,6 +37,7 @@ from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
 from apps.tenancy.views import AuthTenantsView, TenantInvitationViewSet
+from apps.tenancy.views import TenantSettingsView
 from apps.tenancy.views import AcceptTenantInvitationView
 
 def health_check(request):
@@ -104,6 +105,7 @@ urlpatterns = [
     path("api/inventory-valuation/export/", InventoryValuationExportView.as_view(), name="inventory-valuation-export"),
 
     path("api/audit-logs/options/", AuditLogOptionsView.as_view(), name="audit-log-options"),
+    path("api/tenant-settings/", TenantSettingsView.as_view(), name="tenant-settings"),
 
     path("api/", include(router.urls)),
 ]

@@ -10,6 +10,12 @@ class Tenant(models.Model):
     slug = models.SlugField(max_length=80, unique=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    company_name = models.CharField(max_length=200, blank=True)
+    tax_id = models.CharField(max_length=50, blank=True)
+    phone = models.CharField(max_length=50, blank=True)
+    address = models.TextField(blank=True)
+    currency_code = models.CharField(max_length=10, default="BOB")
+    timezone = models.CharField(max_length=100, default="America/La_Paz")
 
     def save(self, *args, **kwargs):
         if not self.slug:
