@@ -1,0 +1,176 @@
+import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+
+import {
+  getTenantSettings,
+  updateTenantSettings,
+  type UpdateTenantSettingsPayload,
+} from "./api";
+import { useTenant } from "../../context/TenantContext";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+export function TenantSettingsPage() {
+  const { tenantSlug } = useTenant();
+  const queryClient = useQueryClient();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isDirty },
+  } = useForm<UpdateTenantSettingsPayload>({
+    defaultValues: {
+      name: "",
+      company_name: "",
+      tax_id: "",
+      phone: "",
+      address: "",
+      currency_code: "BOB",
+      timezone: "America/La_Paz",
+    },
+  });
+
+  const {
+    data: settings,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["tenant-settings", tenantSlug],
+    queryFn: getTenantSettings,
+  });
+
+  useEffect(() => {
+    if (settings) {
+      reset({
+        name: settings.name,
+        company_name: settings.company_name,
+        tax_id: settings.tax_id,
+        phone: settings.phone,
+        address: settings.address,
+        currency_code: settings.currency_code,
+        timezone: settings.timezone,
+      });
+    }
+  }, [settings, reset]);
+
+  const updateMutation = useMutation({
+    mutationFn: updateTenantSettings,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-settings", tenantSlug],
+      });
+
+      reset({
+        name: data.name,
+        company_name: data.company_name,
+        tax_id: data.tax_id,
+        phone: data.phone,
+        address: data.address,
+        currency_code: data.currency_code,
+        timezone: data.timezone,
+      });
+    },
+  });
+
+  function onSubmit(values: UpdateTenantSettingsPayload) {
+    updateMutation.mutate(values);
+  }
+
+  return (
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Company Settings
+        </h2>
+        <p className="text-muted-foreground">
+          Manage company information for this workspace.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Company Information</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          {isLoading && <p className="text-muted-foreground">Loading...</p>}
+
+          {isError && (
+            <p className="text-sm text-red-600">
+              Could not load company settings.
+            </p>
+          )}
+
+          {!isLoading && !isError && (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium">Workspace Name</label>
+                  <Input {...register("name")} />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Company Name</label>
+                  <Input {...register("company_name")} />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">NIT / Tax ID</label>
+                  <Input {...register("tax_id")} />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <Input {...register("phone")} />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Currency</label>
+                  <Input {...register("currency_code")} />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Timezone</label>
+                  <Input {...register("timezone")} />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium">Address</label>
+                  <Input {...register("address")} />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={!isDirty || updateMutation.isPending}
+              >
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+
+              {updateMutation.isError && (
+                <p className="text-sm text-red-600">
+                  Could not save company settings.
+                </p>
+              )}
+
+              {updateMutation.isSuccess && (
+                <p className="text-sm text-emerald-600">
+                  Company settings saved.
+                </p>
+              )}
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </section>
+  );
+}

@@ -50,6 +50,7 @@ export function DashboardLayout() {
               { label: "Tenant Users", to: "/tenant-memberships" },
               { label: "Invitations", to: "/tenant-invitations" },
               { label: "Audit Logs", to: "/audit-logs" },
+              { label: "Company Settings", to: "/tenant-settings" },
             ],
           },
         ]
