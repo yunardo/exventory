@@ -603,7 +603,7 @@ class KardexExportView(KardexView):
         header_fill = PatternFill("solid", fgColor="1E293B")
         header_font = Font(color="FFFFFF", bold=True)
 
-        for cell in ws[1]:
+        for cell in ws[6]:
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center")
@@ -670,7 +670,7 @@ class CurrentStockExportView(CurrentStockView):
         header_fill = PatternFill("solid", fgColor="1E293B")
         header_font = Font(color="FFFFFF", bold=True)
 
-        for cell in ws[1]:
+        for cell in ws[6]:
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center")
@@ -771,7 +771,7 @@ class InventoryValuationExportView(InventoryValuationView):
         header_fill = PatternFill("solid", fgColor="1E293B")
         header_font = Font(color="FFFFFF", bold=True)
 
-        for cell in ws[1]:
+        for cell in ws[6]:
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center")

@@ -18,6 +18,9 @@ from rest_framework.decorators import action
 from django.conf import settings
 from django.core.mail import send_mail
 
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+
+
 class AuthTenantsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -176,11 +179,20 @@ class TenantInvitationViewSet(ModelViewSet):
 
         subject = f"You have been invited to {self.request.tenant.name}"
 
+        company_name = self.request.tenant.company_name or self.request.tenant.name
+
         message = (
-            f"You have been invited to join {self.request.tenant.name} on Exventory.\n\n"
+            f"You have been invited to join {company_name} on Exventory.\n\n"
+            f"Role: {invitation.role}\n\n"
             f"Accept your invitation here:\n{invite_link}\n\n"
-            f"This invitation expires at {invitation.expires_at}."
+            f"This invitation expires at {invitation.expires_at}.\n\n"
         )
+
+        if self.request.tenant.phone:
+            message += f"Phone: {self.request.tenant.phone}\n"
+
+        if self.request.tenant.address:
+            message += f"Address: {self.request.tenant.address}\n"
 
         send_mail(
             subject=subject,
@@ -220,13 +232,23 @@ class TenantInvitationViewSet(ModelViewSet):
             f"/accept-invitation?token={invitation.token}"
         )
 
+        company_name = self.request.tenant.company_name or self.request.tenant.name
+
+        message = (
+            f"Your invitation to join {request.tenant.name} on Exventory has been renewed.\n\n"
+            f"Accept your invitation here:\n{invite_link}\n\n"
+            f"This invitation expires at {invitation.expires_at}."
+        )
+
+        if self.request.tenant.phone:
+            message += f"Phone: {self.request.tenant.phone}\n"
+
+        if self.request.tenant.address:
+            message += f"Address: {self.request.tenant.address}\n"
+
         send_mail(
             subject=f"Your invitation to {request.tenant.name} has been renewed",
-            message=(
-                f"Your invitation to join {request.tenant.name} on Exventory has been renewed.\n\n"
-                f"Accept your invitation here:\n{invite_link}\n\n"
-                f"This invitation expires at {invitation.expires_at}."
-            ),
+            message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[invitation.email],
             fail_silently=False,
@@ -311,6 +333,8 @@ class AcceptTenantInvitationView(APIView):
 
 
 class TenantSettingsView(APIView):
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
     permission_classes = [
         IsAuthenticated,
         IsTenantMember,

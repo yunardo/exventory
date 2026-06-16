@@ -16,6 +16,11 @@ class Tenant(models.Model):
     address = models.TextField(blank=True)
     currency_code = models.CharField(max_length=10, default="BOB")
     timezone = models.CharField(max_length=100, default="America/La_Paz")
+    company_logo = models.ImageField(
+        upload_to="tenant_logos/",
+        blank=True,
+        null=True,
+    )
 
     def save(self, *args, **kwargs):
         if not self.slug:

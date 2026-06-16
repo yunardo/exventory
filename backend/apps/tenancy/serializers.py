@@ -81,6 +81,7 @@ class TenantSettingsSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "company_name",
+            "company_logo",
             "tax_id",
             "phone",
             "address",

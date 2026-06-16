@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
@@ -21,6 +21,7 @@ import {
 export function TenantSettingsPage() {
   const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const {
     register,
@@ -78,11 +79,25 @@ export function TenantSettingsPage() {
         currency_code: data.currency_code,
         timezone: data.timezone,
       });
+
+      setLogoFile(null);
     },
   });
 
   function onSubmit(values: UpdateTenantSettingsPayload) {
-    updateMutation.mutate(values);
+    const formData = new FormData();
+
+    Object.entries(values).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    if (logoFile) {
+      formData.append("company_logo", logoFile);
+    }
+
+    updateMutation.mutate(formData);
   }
 
   return (
@@ -112,6 +127,16 @@ export function TenantSettingsPage() {
 
           {!isLoading && !isError && (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {settings?.company_logo && (
+                <div className="mb-4">
+                  <label className="text-sm font-medium">Current Logo</label>
+                  <img
+                    src={settings.company_logo}
+                    alt="Company logo"
+                    className="mt-2 h-24 rounded-xl border bg-white object-contain p-2"
+                  />
+                </div>
+              )}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="text-sm font-medium">Workspace Name</label>
@@ -121,6 +146,18 @@ export function TenantSettingsPage() {
                 <div>
                   <label className="text-sm font-medium">Company Name</label>
                   <Input {...register("company_name")} />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium">Company Logo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      setLogoFile(event.target.files?.[0] ?? null);
+                    }}
+                    className="mt-2 block w-full text-sm"
+                  />
                 </div>
 
                 <div>

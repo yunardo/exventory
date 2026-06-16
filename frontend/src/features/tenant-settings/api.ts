@@ -5,6 +5,7 @@ export type TenantSettings = {
   name: string;
   slug: string;
   company_name: string;
+  company_logo: string | null;
   tax_id: string;
   phone: string;
   address: string;
@@ -32,11 +33,18 @@ export async function getTenantSettings() {
 }
 
 export async function updateTenantSettings(
-  payload: UpdateTenantSettingsPayload
+  payload: UpdateTenantSettingsPayload | FormData
 ) {
   const response = await tenantApiClient.patch<TenantSettings>(
     "/api/tenant-settings/",
-    payload
+    payload,
+    payload instanceof FormData
+      ? {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      : undefined
   );
 
   return response.data;

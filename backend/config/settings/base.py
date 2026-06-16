@@ -171,3 +171,6 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", default="noreply@exventory.com")
 
 FRONTEND_APP_URL = os.getenv("FRONTEND_APP_URL", default="https://app.exventory.com")
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

@@ -40,6 +40,9 @@ from apps.tenancy.views import AuthTenantsView, TenantInvitationViewSet
 from apps.tenancy.views import TenantSettingsView
 from apps.tenancy.views import AcceptTenantInvitationView
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 def health_check(request):
     return JsonResponse({"status": "ok"})
 
@@ -109,3 +112,6 @@ urlpatterns = [
 
     path("api/", include(router.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
