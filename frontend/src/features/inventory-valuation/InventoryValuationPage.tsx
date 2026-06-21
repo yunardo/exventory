@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "../../context/TenantContext";
 import {
   exportInventoryValuation,
+  exportInventoryValuationPdf,
   getInventoryValuation,
 } from "./api";
 
@@ -47,6 +48,10 @@ export function InventoryValuationPage() {
 
         <Button variant="outline" onClick={exportInventoryValuation}>
           Export Excel
+        </Button>
+
+        <Button variant="outline" onClick={exportInventoryValuationPdf}>
+          Export PDF
         </Button>
       </div>
 

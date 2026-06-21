@@ -38,3 +38,23 @@ export async function exportInventoryValuation() {
   link.remove();
   window.URL.revokeObjectURL(url);
 }
+
+export async function exportInventoryValuationPdf() {
+  const response = await tenantApiClient.get(
+    "/api/inventory-valuation/pdf/",
+    {
+      responseType: "blob",
+    }
+  );
+
+  const url = window.URL.createObjectURL(response.data);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "inventory_valuation.pdf";
+  document.body.appendChild(link);
+  link.click();
+
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}

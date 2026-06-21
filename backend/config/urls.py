@@ -33,6 +33,7 @@ from apps.inventory.views import KardexExportView
 from apps.inventory.views import CurrentStockExportView
 from apps.inventory.views import InventoryValuationView
 from apps.inventory.views import InventoryValuationExportView
+from apps.inventory.views import InventoryValuationPdfView
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
@@ -109,6 +110,12 @@ urlpatterns = [
 
     path("api/audit-logs/options/", AuditLogOptionsView.as_view(), name="audit-log-options"),
     path("api/tenant-settings/", TenantSettingsView.as_view(), name="tenant-settings"),
+
+    path(
+        "inventory-valuation/pdf/",
+        InventoryValuationPdfView.as_view(),
+        name="inventory-valuation-pdf",
+    ),
 
     path("api/", include(router.urls)),
 ]
