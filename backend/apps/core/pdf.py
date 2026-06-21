@@ -4,6 +4,12 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+import logging
+from tempfile import NamedTemporaryFile
+
+from reportlab.platypus import Image
+
+logger = logging.getLogger(__name__)
 
 
 def build_inventory_valuation_pdf(tenant, data):
@@ -23,6 +29,19 @@ def build_inventory_valuation_pdf(tenant, data):
 
     company_name = tenant.company_name or tenant.name
 
+    if tenant.company_logo:
+        try:
+            with tenant.company_logo.open("rb") as logo_file:
+                with NamedTemporaryFile(suffix=".png") as tmp:
+                    tmp.write(logo_file.read())
+                    tmp.flush()
+
+                    logo = Image(tmp.name, width=140, height=55)
+                    elements.append(logo)
+                    elements.append(Spacer(1, 8))
+
+        except Exception as exc:
+            logger.exception("Could not add tenant logo to PDF: %s", exc)
     elements.append(Paragraph(company_name, styles["Title"]))
 
     if tenant.tax_id:
