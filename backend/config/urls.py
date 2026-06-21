@@ -34,6 +34,7 @@ from apps.inventory.views import CurrentStockExportView
 from apps.inventory.views import InventoryValuationView
 from apps.inventory.views import InventoryValuationExportView
 from apps.inventory.views import InventoryValuationPdfView
+from apps.inventory.views import CurrentStockPdfView
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
@@ -115,6 +116,11 @@ urlpatterns = [
         "api/inventory-valuation/pdf/",
         InventoryValuationPdfView.as_view(),
         name="inventory-valuation-pdf",
+    ),
+    path(
+        "api/current-stock/pdf/",
+        CurrentStockPdfView.as_view(),
+        name="current-stock-pdf",
     ),
 
     path("api/", include(router.urls)),

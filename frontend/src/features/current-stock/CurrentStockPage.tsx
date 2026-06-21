@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { exportCurrentStock, getCurrentStock } from "./api";
+import { exportCurrentStock, exportCurrentStockPdf, getCurrentStock } from "./api";
 
 import {
   Card,
@@ -51,9 +51,15 @@ export function CurrentStockPage() {
               </p>
             </div>
 
-            <Button variant="outline" onClick={exportCurrentStock}>
-              Export Excel
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={exportCurrentStock}>
+                Export Excel
+              </Button>
+
+              <Button variant="outline" onClick={exportCurrentStockPdf}>
+                Export PDF
+              </Button>
+            </div>
           </div>
         </CardHeader>
 

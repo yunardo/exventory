@@ -20,7 +20,6 @@ export async function getCurrentStock() {
   return unwrapPaginatedResponse(response.data);
 }
 
-
 export async function exportCurrentStock() {
   const response = await tenantApiClient.get("/api/current-stock/export/", {
     responseType: "blob",
@@ -31,6 +30,23 @@ export async function exportCurrentStock() {
 
   link.href = url;
   link.download = "current_stock.xlsx";
+  document.body.appendChild(link);
+  link.click();
+
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function exportCurrentStockPdf() {
+  const response = await tenantApiClient.get("/api/current-stock/pdf/", {
+    responseType: "blob",
+  });
+
+  const url = window.URL.createObjectURL(response.data);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "current_stock.pdf";
   document.body.appendChild(link);
   link.click();
 
