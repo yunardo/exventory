@@ -1,14 +1,22 @@
+import logging
 from tempfile import NamedTemporaryFile
 
 from openpyxl.drawing.image import Image
 from openpyxl.styles import Font
 
+logger = logging.getLogger(__name__)
+
 
 def add_tenant_report_header(ws, tenant):
+    row_offset = 1
+
     if tenant.company_logo:
         try:
+            logo_name = tenant.company_logo.name
+            suffix = "." + logo_name.split(".")[-1].lower()
+
             with tenant.company_logo.open("rb") as logo_file:
-                with NamedTemporaryFile(suffix=".png") as tmp:
+                with NamedTemporaryFile(suffix=suffix) as tmp:
                     tmp.write(logo_file.read())
                     tmp.flush()
 
@@ -16,12 +24,13 @@ def add_tenant_report_header(ws, tenant):
                     img.height = 60
                     img.width = 160
                     ws.add_image(img, "A1")
-        except Exception:
-            pass
 
-        ws.append([])
-        ws.append([])
-        ws.append([])
+            row_offset = 5
+
+        except Exception as exc:
+            logger.exception("Could not add tenant logo to Excel: %s", exc)
+
+    for _ in range(row_offset - 1):
         ws.append([])
 
     ws.append([tenant.company_name or tenant.name])
@@ -30,5 +39,5 @@ def add_tenant_report_header(ws, tenant):
     ws.append([f"Phone: {tenant.phone}" if tenant.phone else ""])
     ws.append([])
 
-    current_row = ws.max_row - 4
-    ws[f"A{current_row}"].font = Font(bold=True, size=14)
+    company_row = ws.max_row - 4
+    ws[f"A{company_row}"].font = Font(bold=True, size=14)
