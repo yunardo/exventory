@@ -26,6 +26,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from apps.core.excel import add_tenant_report_header
 from apps.core.pdf import build_inventory_valuation_pdf
 from apps.core.pdf import build_current_stock_pdf
+from apps.core.pdf import build_kardex_pdf
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -853,6 +854,29 @@ class CurrentStockPdfView(CurrentStockView):
         )
         http_response["Content-Disposition"] = (
             'attachment; filename="current_stock.pdf"'
+        )
+
+        return http_response
+
+
+class KardexPdfView(KardexView):
+    def get(self, request):
+        response = super().get(request)
+
+        if response.status_code != 200:
+            return response
+
+        pdf = build_kardex_pdf(
+            tenant=request.tenant,
+            rows=response.data,
+        )
+
+        http_response = HttpResponse(
+            pdf,
+            content_type="application/pdf",
+        )
+        http_response["Content-Disposition"] = (
+            'attachment; filename="kardex.pdf"'
         )
 
         return http_response

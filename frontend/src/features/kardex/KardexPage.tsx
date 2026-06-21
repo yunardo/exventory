@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getWarehouses } from "../warehouses/api";
 import { getItems } from "../items/api";
-import { getKardex } from "./api";
+import { exportKardexPdf, getKardex } from "./api";
 import { exportKardex } from "./api";
 import { useTenant } from "../../context/TenantContext";
 
@@ -113,6 +113,13 @@ export function KardexPage() {
               onClick={() => exportKardex(warehouseId, itemId)}
             >
               Export Excel
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!canSearch}
+              onClick={() => exportKardexPdf(warehouseId, itemId)}
+            >
+              Export PDF
             </Button>
           </div>
         </CardContent>

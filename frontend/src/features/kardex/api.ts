@@ -46,3 +46,23 @@ export async function exportKardex(warehouseId: number, itemId: number) {
   link.remove();
   window.URL.revokeObjectURL(url);
 }
+
+export async function exportKardexPdf(warehouseId: number, itemId: number) {
+  const response = await tenantApiClient.get(
+    `/api/kardex/pdf/?warehouse=${warehouseId}&item=${itemId}`,
+    {
+      responseType: "blob",
+    }
+  );
+
+  const url = window.URL.createObjectURL(response.data);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `kardex_${warehouseId}_${itemId}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}

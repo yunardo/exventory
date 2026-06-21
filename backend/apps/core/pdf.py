@@ -182,3 +182,105 @@ def build_current_stock_pdf(tenant, rows):
 
     buffer.seek(0)
     return buffer
+
+
+def add_pdf_tenant_header(elements, tenant, styles):
+    if tenant.company_logo:
+        try:
+            with tenant.company_logo.open("rb") as logo_file:
+                logo_buffer = BytesIO(logo_file.read())
+                logo_buffer.seek(0)
+
+                logo = Image(logo_buffer, width=140, height=55)
+                elements.append(logo)
+                elements.append(Spacer(1, 8))
+        except Exception as exc:
+            logger.exception("Could not add tenant logo to PDF: %s", exc)
+
+    company_name = tenant.company_name or tenant.name
+
+    elements.append(Paragraph(company_name, styles["Title"]))
+
+    if tenant.tax_id:
+        elements.append(Paragraph(f"NIT: {tenant.tax_id}", styles["Normal"]))
+
+    if tenant.address:
+        elements.append(Paragraph(f"Address: {tenant.address}", styles["Normal"]))
+
+    if tenant.phone:
+        elements.append(Paragraph(f"Phone: {tenant.phone}", styles["Normal"]))
+
+    elements.append(Spacer(1, 18))
+
+
+def build_kardex_pdf(tenant, rows):
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=24,
+        leftMargin=24,
+        topMargin=24,
+        bottomMargin=24,
+    )
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    add_pdf_tenant_header(elements, tenant, styles)
+
+    elements.append(Paragraph("Kardex Report", styles["Heading2"]))
+    elements.append(Spacer(1, 12))
+
+    table_data = [
+        [
+            "Date",
+            "Type",
+            "Reference",
+            "Entry",
+            "Exit",
+            "Balance",
+            "Unit Cost",
+            "Mov. Cost",
+            "Balance Value",
+            "Avg Cost",
+        ]
+    ]
+
+    for row in rows:
+        table_data.append([
+            row["date"],
+            row["type"],
+            row["reference"] or "-",
+            row["entry_quantity"],
+            row["exit_quantity"],
+            row["balance_quantity"],
+            row["unit_cost"],
+            row["total_cost"],
+            row["balance_value"],
+            row["average_balance_cost"],
+        ])
+
+    table = Table(
+        table_data,
+        colWidths=[55, 78, 85, 45, 45, 55, 55, 60, 70, 55],
+        repeatRows=1,
+    )
+
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1E293B")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 7),
+        ("ALIGN", (3, 1), (-1, -1), "RIGHT"),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+
+    elements.append(table)
+
+    doc.build(elements)
+
+    buffer.seek(0)
+    return buffer
