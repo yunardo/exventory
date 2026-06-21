@@ -7,6 +7,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 import logging
 from tempfile import NamedTemporaryFile
 
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Image
 
 logger = logging.getLogger(__name__)
@@ -32,13 +33,13 @@ def build_inventory_valuation_pdf(tenant, data):
     if tenant.company_logo:
         try:
             with tenant.company_logo.open("rb") as logo_file:
-                with NamedTemporaryFile(suffix=".png") as tmp:
-                    tmp.write(logo_file.read())
-                    tmp.flush()
+                logo_buffer = BytesIO(logo_file.read())
+                logo_buffer.seek(0)
 
-                    logo = Image(tmp.name, width=140, height=55)
-                    elements.append(logo)
-                    elements.append(Spacer(1, 8))
+                logo = Image(logo_buffer, width=140, height=55)
+
+                elements.append(logo)
+                elements.append(Spacer(1, 8))
 
         except Exception as exc:
             logger.exception("Could not add tenant logo to PDF: %s", exc)
