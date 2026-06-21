@@ -3,34 +3,28 @@ from io import BytesIO
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 import logging
 from tempfile import NamedTemporaryFile
 
 from reportlab.lib.utils import ImageReader
-from reportlab.platypus import Image
 from decimal import Decimal
+
+from datetime import datetime
+
+from reportlab.platypus import (
+    Image,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
 
 logger = logging.getLogger(__name__)
 
 
-def build_inventory_valuation_pdf(tenant, data):
-    buffer = BytesIO()
-
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        rightMargin=36,
-        leftMargin=36,
-        topMargin=36,
-        bottomMargin=36,
-    )
-
-    styles = getSampleStyleSheet()
-    elements = []
-
-    company_name = tenant.company_name or tenant.name
-
+def add_pdf_tenant_header(elements, tenant, styles, report_title):
     if tenant.company_logo:
         try:
             with tenant.company_logo.open("rb") as logo_file:
@@ -38,12 +32,13 @@ def build_inventory_valuation_pdf(tenant, data):
                 logo_buffer.seek(0)
 
                 logo = Image(logo_buffer, width=140, height=55)
-
                 elements.append(logo)
                 elements.append(Spacer(1, 8))
-
         except Exception as exc:
             logger.exception("Could not add tenant logo to PDF: %s", exc)
+
+    company_name = tenant.company_name or tenant.name
+
     elements.append(Paragraph(company_name, styles["Title"]))
 
     if tenant.tax_id:
@@ -56,8 +51,68 @@ def build_inventory_valuation_pdf(tenant, data):
         elements.append(Paragraph(f"Phone: {tenant.phone}", styles["Normal"]))
 
     elements.append(Spacer(1, 18))
-    elements.append(Paragraph("Inventory Valuation Report", styles["Heading2"]))
+    elements.append(Paragraph(report_title, styles["Heading2"]))
+    elements.append(Spacer(1, 8))
+
+    generated_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+    elements.append(
+        Paragraph(
+            f"Generated at: {generated_at}",
+            styles["Normal"],
+        )
+    )
+
     elements.append(Spacer(1, 12))
+
+
+def add_pdf_footer(canvas, doc):
+    canvas.saveState()
+
+    footer_text = f"Exventory · Page {doc.page}"
+    canvas.setFont("Helvetica", 8)
+    canvas.setFillColor(colors.grey)
+
+    canvas.drawRightString(
+        doc.pagesize[0] - doc.rightMargin,
+        18,
+        footer_text,
+    )
+
+    canvas.restoreState()
+
+
+def build_pdf_buffer(elements, pagesize=letter):
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=pagesize,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36,
+    )
+
+    doc.build(
+        elements,
+        onFirstPage=add_pdf_footer,
+        onLaterPages=add_pdf_footer,
+    )
+
+    buffer.seek(0)
+    return buffer
+
+
+def build_inventory_valuation_pdf(tenant, data):
+    styles = getSampleStyleSheet()
+    elements = []
+
+    add_pdf_tenant_header(
+        elements,
+        tenant,
+        styles,
+        "Inventory Valuation Report",
+    )
 
     table_data = [["Warehouse", "Inventory Value"]]
 
@@ -83,55 +138,19 @@ def build_inventory_valuation_pdf(tenant, data):
 
     elements.append(table)
 
-    doc.build(elements)
-
-    buffer.seek(0)
-    return buffer
+    return build_pdf_buffer(elements)
 
 
 def build_current_stock_pdf(tenant, rows):
-    buffer = BytesIO()
-
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        rightMargin=36,
-        leftMargin=36,
-        topMargin=36,
-        bottomMargin=36,
-    )
-
     styles = getSampleStyleSheet()
     elements = []
 
-    if tenant.company_logo:
-        try:
-            with tenant.company_logo.open("rb") as logo_file:
-                logo_buffer = BytesIO(logo_file.read())
-                logo_buffer.seek(0)
-
-                logo = Image(logo_buffer, width=140, height=55)
-                elements.append(logo)
-                elements.append(Spacer(1, 8))
-        except Exception as exc:
-            logger.exception("Could not add tenant logo to PDF: %s", exc)
-
-    company_name = tenant.company_name or tenant.name
-
-    elements.append(Paragraph(company_name, styles["Title"]))
-
-    if tenant.tax_id:
-        elements.append(Paragraph(f"NIT: {tenant.tax_id}", styles["Normal"]))
-
-    if tenant.address:
-        elements.append(Paragraph(f"Address: {tenant.address}", styles["Normal"]))
-
-    if tenant.phone:
-        elements.append(Paragraph(f"Phone: {tenant.phone}", styles["Normal"]))
-
-    elements.append(Spacer(1, 18))
-    elements.append(Paragraph("Current Stock Report", styles["Heading2"]))
-    elements.append(Spacer(1, 12))
+    add_pdf_tenant_header(
+        elements,
+        tenant,
+        styles,
+        "Current Stock Report",
+    )
 
     table_data = [
         [
@@ -178,60 +197,19 @@ def build_current_stock_pdf(tenant, rows):
 
     elements.append(table)
 
-    doc.build(elements)
-
-    buffer.seek(0)
-    return buffer
-
-
-def add_pdf_tenant_header(elements, tenant, styles):
-    if tenant.company_logo:
-        try:
-            with tenant.company_logo.open("rb") as logo_file:
-                logo_buffer = BytesIO(logo_file.read())
-                logo_buffer.seek(0)
-
-                logo = Image(logo_buffer, width=140, height=55)
-                elements.append(logo)
-                elements.append(Spacer(1, 8))
-        except Exception as exc:
-            logger.exception("Could not add tenant logo to PDF: %s", exc)
-
-    company_name = tenant.company_name or tenant.name
-
-    elements.append(Paragraph(company_name, styles["Title"]))
-
-    if tenant.tax_id:
-        elements.append(Paragraph(f"NIT: {tenant.tax_id}", styles["Normal"]))
-
-    if tenant.address:
-        elements.append(Paragraph(f"Address: {tenant.address}", styles["Normal"]))
-
-    if tenant.phone:
-        elements.append(Paragraph(f"Phone: {tenant.phone}", styles["Normal"]))
-
-    elements.append(Spacer(1, 18))
+    return build_pdf_buffer(elements)
 
 
 def build_kardex_pdf(tenant, rows):
-    buffer = BytesIO()
-
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        rightMargin=24,
-        leftMargin=24,
-        topMargin=24,
-        bottomMargin=24,
-    )
-
     styles = getSampleStyleSheet()
     elements = []
 
-    add_pdf_tenant_header(elements, tenant, styles)
-
-    elements.append(Paragraph("Kardex Report", styles["Heading2"]))
-    elements.append(Spacer(1, 12))
+    add_pdf_tenant_header(
+        elements,
+        tenant,
+        styles,
+        "Kardex Report",
+    )
 
     table_data = [
         [
@@ -280,7 +258,4 @@ def build_kardex_pdf(tenant, rows):
 
     elements.append(table)
 
-    doc.build(elements)
-
-    buffer.seek(0)
-    return buffer
+    return build_pdf_buffer(elements)
