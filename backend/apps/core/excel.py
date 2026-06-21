@@ -1,5 +1,5 @@
 import logging
-from tempfile import NamedTemporaryFile
+from io import BytesIO
 
 from openpyxl.drawing.image import Image
 from openpyxl.styles import Font
@@ -12,18 +12,14 @@ def add_tenant_report_header(ws, tenant):
 
     if tenant.company_logo:
         try:
-            logo_name = tenant.company_logo.name
-            suffix = "." + logo_name.split(".")[-1].lower()
-
             with tenant.company_logo.open("rb") as logo_file:
-                with NamedTemporaryFile(suffix=suffix) as tmp:
-                    tmp.write(logo_file.read())
-                    tmp.flush()
+                image_bytes = BytesIO(logo_file.read())
+                img = Image(image_bytes)
 
-                    img = Image(tmp.name)
-                    img.height = 60
-                    img.width = 160
-                    ws.add_image(img, "A1")
+                img.height = 60
+                img.width = 160
+
+                ws.add_image(img, "A1")
 
             row_offset = 5
 
