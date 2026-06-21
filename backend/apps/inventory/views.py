@@ -823,6 +823,7 @@ class InventoryValuationPdfView(InventoryValuationView):
         pdf = build_inventory_valuation_pdf(
             tenant=request.tenant,
             data=response.data,
+            user=request.user,
         )
 
         http_response = HttpResponse(
@@ -846,6 +847,7 @@ class CurrentStockPdfView(CurrentStockView):
         pdf = build_current_stock_pdf(
             tenant=request.tenant,
             rows=response.data,
+            user=request.user,
         )
 
         http_response = HttpResponse(
@@ -869,6 +871,7 @@ class KardexPdfView(KardexView):
         pdf = build_kardex_pdf(
             tenant=request.tenant,
             rows=response.data,
+            user=request.user,
         )
 
         http_response = HttpResponse(
