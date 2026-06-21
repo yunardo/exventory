@@ -112,7 +112,7 @@ urlpatterns = [
     path("api/tenant-settings/", TenantSettingsView.as_view(), name="tenant-settings"),
 
     path(
-        "inventory-valuation/pdf/",
+        "api/inventory-valuation/pdf/",
         InventoryValuationPdfView.as_view(),
         name="inventory-valuation-pdf",
     ),
