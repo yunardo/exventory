@@ -24,6 +24,7 @@ import { TenantInvitationsPage } from "@/features/tenant-memberships/TenantInvit
 import { TenantSettingsPage } from "@/features/tenant-settings/TenantSettingsPage";
 import { UFVRatesPage } from "@/features/ufv-rates/UFVRatesPage";
 import { UFVRevaluationPreviewPage } from "@/features/ufv-revaluation/UFVRevaluationPreviewPage";
+import { UFVRevaluationRunsPage } from "@/features/ufv-revaluation/UFVRevaluationRunsPage";
 
 export function AppRoutes() {
   return (
@@ -59,6 +60,10 @@ export function AppRoutes() {
                 <Route
                   path="/ufv-revaluation"
                   element={<UFVRevaluationPreviewPage />}
+                />
+                <Route
+                  path="/ufv-revaluation-runs"
+                  element={<UFVRevaluationRunsPage />}
                 />
               </Route>
             </Route>

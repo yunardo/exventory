@@ -23,6 +23,7 @@ import {
   Mail,
   Calculator,
   TrendingUp,
+  History,
 } from "lucide-react";
 
 type NavLinkItem = {
@@ -94,6 +95,11 @@ export function DashboardLayout() {
       links: [
         { label: "UFV Rates", to: "/ufv-rates", icon: Calculator },
         { label: "UFV Revaluation", to: "/ufv-revaluation", icon: TrendingUp },
+        {
+          label: "UFV Runs",
+          to: "/ufv-revaluation-runs",
+          icon: History,
+        }
       ],
     },
     {

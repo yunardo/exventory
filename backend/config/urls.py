@@ -39,6 +39,7 @@ from apps.inventory.views import KardexPdfView
 from apps.inventory.views import UFVRateViewSet
 from apps.inventory.views import UFVRevaluationPreviewView
 from apps.inventory.views import UFVRevaluationApplyView
+from apps.inventory.views import UFVRevaluationRunViewSet
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
@@ -89,6 +90,11 @@ router.register(
     r"ufv-rates",
     UFVRateViewSet,
     basename="ufv-rates",
+)
+router.register(
+    r"ufv-revaluation-runs",
+    UFVRevaluationRunViewSet,
+    basename="ufv-revaluation-runs",
 )
 
 urlpatterns = [

@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -1184,3 +1184,21 @@ class UFVRevaluationApplyView(TenantRequiredMixin, APIView):
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class UFVRevaluationRunViewSet(TenantRequiredMixin, ReadOnlyModelViewSet):
+    serializer_class = UFVRevaluationRunSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    def get_queryset(self):
+        return (
+            UFVRevaluationRun.objects
+            .select_related("applied_by")
+            .prefetch_related("lines")
+            .all()
+        )

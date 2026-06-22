@@ -1,3 +1,4 @@
+import { unwrapPaginatedResponse, type PaginatedResponse } from "@/api/pagination";
 import { tenantApiClient } from "../../api/tenantClient";
 
 export type UFVRevaluationRow = {
@@ -58,4 +59,12 @@ export async function applyUFVRevaluation(payload: {
   );
 
   return response.data;
+}
+
+export async function getUFVRevaluationRuns() {
+  const response = await tenantApiClient.get<
+    UFVRevaluationRun[] | PaginatedResponse<UFVRevaluationRun>
+  >("/api/ufv-revaluation-runs/");
+
+  return unwrapPaginatedResponse(response.data);
 }
