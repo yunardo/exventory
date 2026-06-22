@@ -6,6 +6,7 @@ from apps.core.api import TenantRequiredMixin
 from apps.tenancy.models import Membership
 from apps.tenancy.permissions import IsTenantMember, HasTenantRole
 from apps.core.audit_mixins import AuditCrudMixin
+from apps.core.audit import log_audit_event
 from .models import Warehouse, Item, StockEntry, StockExit
 from .models import StockLayer, InventoryAdjustment
 from .models import StockTransfer
@@ -641,6 +642,17 @@ class KardexExportView(KardexView):
 
         http_response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="KardexExport",
+            status_code=200,
+            meta={
+                "format": "xlsx",
+                "params": request.query_params.dict(),
+            },
+        )
+
         return http_response
 
 
@@ -701,6 +713,16 @@ class CurrentStockExportView(CurrentStockView):
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
         http_response["Content-Disposition"] = 'attachment; filename="current_stock.xlsx"'
+
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="CurrentStockExport",
+            status_code=200,
+            meta={
+                "format": "xlsx",
+            },
+        )
 
         return http_response
 
@@ -810,6 +832,16 @@ class InventoryValuationExportView(InventoryValuationView):
             'attachment; filename="inventory_valuation.xlsx"'
         )
 
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="InventoryValuationExport",
+            status_code=200,
+            meta={
+                "format": "xlsx",
+            },
+        )
+
         return http_response
 
 
@@ -832,6 +864,16 @@ class InventoryValuationPdfView(InventoryValuationView):
         )
         http_response["Content-Disposition"] = (
             'attachment; filename="inventory_valuation.pdf"'
+        )
+
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="InventoryValuationPdf",
+            status_code=200,
+            meta={
+                "format": "pdf",
+            },
         )
 
         return http_response
@@ -858,6 +900,16 @@ class CurrentStockPdfView(CurrentStockView):
             'attachment; filename="current_stock.pdf"'
         )
 
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="CurrentStockPdf",
+            status_code=200,
+            meta={
+                "format": "pdf",
+            },
+        )
+
         return http_response
 
 
@@ -880,6 +932,17 @@ class KardexPdfView(KardexView):
         )
         http_response["Content-Disposition"] = (
             'attachment; filename="kardex.pdf"'
+        )
+
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="KardexPdf",
+            status_code=200,
+            meta={
+                "format": "pdf",
+                "params": request.query_params.dict(),
+            },
         )
 
         return http_response

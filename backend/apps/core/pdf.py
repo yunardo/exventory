@@ -159,6 +159,7 @@ def build_current_stock_pdf(tenant, rows, user=None):
         tenant,
         styles,
         "Current Stock Report",
+        user=user,
     )
 
     table_data = [
@@ -218,6 +219,7 @@ def build_kardex_pdf(tenant, rows, user=None):
         tenant,
         styles,
         "Kardex Report",
+        user=user,
     )
 
     table_data = [
