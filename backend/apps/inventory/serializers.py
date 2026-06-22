@@ -250,6 +250,7 @@ class InventoryAdjustmentSerializer(serializers.ModelSerializer):
                 remaining_quantity=adjustment.quantity,
                 unit_cost=adjustment.unit_cost,
                 entry_date=adjustment.adjustment_date,
+                ufv_value=None
             )
             return adjustment
 
@@ -407,6 +408,7 @@ class StockTransferSerializer(serializers.ModelSerializer):
                 remaining_quantity=consumed_quantity,
                 unit_cost=layer.unit_cost,
                 entry_date=stock_transfer.transfer_date,
+                ufv_value=layer.ufv_value,
             )
 
             layer.remaining_quantity -= consumed_quantity

@@ -87,6 +87,7 @@ class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
             remaining_quantity=stock_entry.quantity,
             unit_cost=stock_entry.unit_cost,
             entry_date=stock_entry.entry_date,
+            ufv_value=stock_entry.ufv_value,
         )
 
 
@@ -971,3 +972,84 @@ class UFVRateViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
 
     def get_queryset(self):
         return UFVRate.objects.all()
+
+
+class UFVRevaluationPreviewView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    def get(self, request):
+        closing_date = request.query_params.get("closing_date")
+
+        if not closing_date:
+            return Response(
+                {"detail": "closing_date query param is required."},
+                status=400,
+            )
+
+        closing_ufv = UFVRate.objects.filter(date=closing_date).first()
+
+        if not closing_ufv:
+            return Response(
+                {"detail": "UFV rate for closing_date was not found."},
+                status=400,
+            )
+
+        rows = []
+        total_original_value = Decimal("0")
+        total_updated_value = Decimal("0")
+        total_revaluation = Decimal("0")
+
+        layers = (
+            StockLayer.objects
+            .select_related("warehouse", "item")
+            .filter(
+                remaining_quantity__gt=0,
+                ufv_value__isnull=False,
+            )
+            .order_by("warehouse__name", "item__code", "entry_date", "id")
+        )
+
+        for layer in layers:
+            original_total = layer.remaining_quantity * layer.unit_cost
+
+            updated_unit_cost = layer.unit_cost * (
+                closing_ufv.value / layer.ufv_value
+            )
+
+            updated_total = layer.remaining_quantity * updated_unit_cost
+            revaluation_amount = updated_total - original_total
+
+            total_original_value += original_total
+            total_updated_value += updated_total
+            total_revaluation += revaluation_amount
+
+            rows.append({
+                "warehouse_id": layer.warehouse_id,
+                "warehouse_name": layer.warehouse.name,
+                "item_id": layer.item_id,
+                "item_code": layer.item.code,
+                "item_name": layer.item.name,
+                "entry_date": layer.entry_date,
+                "quantity": str(layer.remaining_quantity.quantize(Decimal("0.01"))),
+                "original_unit_cost": str(layer.unit_cost.quantize(Decimal("0.01"))),
+                "purchase_ufv": str(layer.ufv_value.quantize(Decimal("0.00001"))),
+                "closing_ufv": str(closing_ufv.value.quantize(Decimal("0.00001"))),
+                "updated_unit_cost": str(updated_unit_cost.quantize(Decimal("0.01"))),
+                "original_total": str(original_total.quantize(Decimal("0.01"))),
+                "updated_total": str(updated_total.quantize(Decimal("0.01"))),
+                "revaluation_amount": str(revaluation_amount.quantize(Decimal("0.01"))),
+            })
+
+        return Response({
+            "closing_date": closing_date,
+            "closing_ufv": str(closing_ufv.value.quantize(Decimal("0.00001"))),
+            "total_original_value": str(total_original_value.quantize(Decimal("0.01"))),
+            "total_updated_value": str(total_updated_value.quantize(Decimal("0.01"))),
+            "total_revaluation": str(total_revaluation.quantize(Decimal("0.01"))),
+            "rows": rows,
+        })

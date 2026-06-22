@@ -22,6 +22,7 @@ import {
   Warehouse,
   Mail,
   Calculator,
+  TrendingUp,
 } from "lucide-react";
 
 type NavLinkItem = {
@@ -89,12 +90,18 @@ export function DashboardLayout() {
       ],
     },
     {
+      title: "Financial",
+      links: [
+        { label: "UFV Rates", to: "/ufv-rates", icon: Calculator },
+        { label: "UFV Revaluation", to: "/ufv-revaluation", icon: TrendingUp },
+      ],
+    },
+    {
       title: "Settings",
       links: [
         { label: "Tenant Users", to: "/tenant-memberships", icon: Users },
         { label: "Invitations", to: "/tenant-invitations", icon: Mail },
         { label: "Company Settings", to: "/tenant-settings", icon: Settings },
-        { label: "UFV Rates", to: "/ufv-rates", icon: Calculator },
         ...(canViewAuditLogs(tenantRole)
           ? [{ label: "Audit Logs", to: "/audit-logs", icon: FileClock },]
           : []),

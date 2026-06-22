@@ -130,6 +130,13 @@ class StockLayer(TenantAwareModel):
     unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
     entry_date = models.DateField()
 
+    ufv_value = models.DecimalField(
+        max_digits=12,
+        decimal_places=5,
+        null=True,
+        blank=True,
+    )
+
     class Meta:
         ordering = ["entry_date", "id"]
 
