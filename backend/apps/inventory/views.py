@@ -9,13 +9,14 @@ from apps.core.audit_mixins import AuditCrudMixin
 from apps.core.audit import log_audit_event
 from .models import Warehouse, Item, StockEntry, StockExit
 from .models import StockLayer, InventoryAdjustment
-from .models import StockTransfer
+from .models import StockTransfer, UFVRate
 from .serializers import StockTransferSerializer
 from .serializers import WarehouseSerializer
 from .serializers import ItemSerializer
 from .serializers import StockEntrySerializer
 from .serializers import StockExitSerializer
 from .serializers import InventoryAdjustmentSerializer
+from .serializers import UFVRateSerializer
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
 
@@ -946,3 +947,16 @@ class KardexPdfView(KardexView):
         )
 
         return http_response
+    
+
+class UFVRateViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = UFVRateSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    def get_queryset(self):
+        return UFVRate.objects.all()

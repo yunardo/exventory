@@ -9,7 +9,7 @@ from django.db import transaction
 
 from .models import StockEntry, StockExit, StockLayer, StockExitAllocation
 from .models import InventoryAdjustment, InventoryAdjustmentAllocation
-from .models import StockTransfer, StockTransferAllocation
+from .models import StockTransfer, StockTransferAllocation, UFVRate
 
 
 
@@ -407,3 +407,13 @@ class StockTransferSerializer(serializers.ModelSerializer):
             quantity_to_transfer -= consumed_quantity
 
         return stock_transfer
+
+
+class UFVRateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UFVRate
+        fields = [
+            "id",
+            "date",
+            "value",
+        ]

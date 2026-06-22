@@ -36,6 +36,7 @@ from apps.inventory.views import InventoryValuationExportView
 from apps.inventory.views import InventoryValuationPdfView
 from apps.inventory.views import CurrentStockPdfView
 from apps.inventory.views import KardexPdfView
+from apps.inventory.views import UFVRateViewSet
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
@@ -81,6 +82,11 @@ router.register(
     r"tenant-invitations",
     TenantInvitationViewSet,
     basename="tenant-invitations",
+)
+router.register(
+    r"ufv-rates",
+    UFVRateViewSet,
+    basename="ufv-rates",
 )
 
 urlpatterns = [

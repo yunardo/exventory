@@ -246,3 +246,15 @@ class StockTransferAllocation(TenantAwareModel):
 
     def __str__(self):
         return f"{self.stock_transfer_id} -> {self.stock_layer_id} ({self.quantity})"
+
+
+class UFVRate(TenantAwareModel):
+    date = models.DateField()
+    value = models.DecimalField(max_digits=12, decimal_places=5)
+
+    class Meta:
+        ordering = ["-date"]
+        unique_together = (("tenant", "date"),)
+
+    def __str__(self):
+        return f"{self.date} - {self.value}"
