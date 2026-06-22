@@ -1,63 +1,47 @@
+import { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { logout } from "../api/auth";
 import { useTenant } from "../context/TenantContext";
-import { canManageAdjustments, canViewAuditLogs } from "@/auth/roles";
+import {
+  canManageAdjustments,
+  canViewAuditLogs,
+} from "../auth/roles";
+import {
+  BarChart3,
+  Boxes,
+  ClipboardList,
+  FileBarChart,
+  FileClock,
+  Home,
+  Landmark,
+  Package,
+  PackageMinus,
+  PackagePlus,
+  Repeat,
+  Settings,
+  Users,
+  Warehouse,
+  Mail,
+  Calculator,
+} from "lucide-react";
+
+type NavLinkItem = {
+  label: string;
+  to: string;
+  icon: React.ElementType;
+};
+
+type NavGroup = {
+  title: string;
+  links: NavLinkItem[];
+};
 
 export function DashboardLayout() {
+  const navigate = useNavigate();
   const { tenantSlug, tenantRole, clearTenant } = useTenant();
 
-  const navGroups = [
-    {
-      title: "Overview",
-      links: [{ label: "Dashboard", to: "/dashboard" }],
-    },
-    {
-      title: "Inventory",
-      links: [
-        { label: "Current Stock", to: "/current-stock" },
-        { label: "Stock Movements", to: "/stock-movements" },
-        { label: "Stock Entries", to: "/stock-entries" },
-        { label: "Stock Exits", to: "/stock-exits" },
-        { label: "Stock Transfers", to: "/stock-transfers" },
-        ...(canManageAdjustments(tenantRole)
-          ? [{ label: "Inventory Adjustments", to: "/inventory-adjustments" }]
-          : []),
-        { label: "Kardex", to: "/kardex" },
-        { label: "Inventory Valuation", to: "/inventory-valuation" },
-      ],
-    },
-    {
-      title: "Catalog",
-      links: [
-        { label: "Warehouses", to: "/warehouses" },
-        { label: "Items", to: "/items" },
-      ],
-    },
-    ...(canViewAuditLogs(tenantRole)
-      ? [
-          {
-            title: "System",
-            links: [
-              { label: "Tenant Users", to: "/tenant-memberships" },
-              { label: "Invitations", to: "/tenant-invitations" },
-              { label: "Audit Logs", to: "/audit-logs" },
-            ],
-          },
-          {
-            title: "Settings",
-            links: [
-              { label: "Tenant Users", to: "/tenant-memberships" },
-              { label: "Invitations", to: "/tenant-invitations" },
-              { label: "UFV Rates", to: "/ufv-rates" },
-              { label: "Company Settings", to: "/tenant-settings" },
-              { label: "Audit Logs", to: "/audit-logs" },
-            ],
-          },
-        ]
-      : []),
-  ];
-  const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!tenantSlug) {
@@ -71,49 +55,139 @@ export function DashboardLayout() {
     navigate("/login", { replace: true });
   }
 
+  function toggleGroup(title: string) {
+    setCollapsedGroups((current) => ({
+      ...current,
+      [title]: !current[title],
+    }));
+  }
+
+  const navGroups: NavGroup[] = [
+    {
+      title: "Overview",
+      links: [{ label: "Dashboard", to: "/dashboard", icon: Home }],
+    },
+    {
+      title: "Inventory",
+      links: [
+        { label: "Current Stock", to: "/current-stock", icon: Boxes },
+        { label: "Stock Movements", to: "/stock-movements", icon: FileClock },
+        { label: "Stock Entries", to: "/stock-entries", icon: PackagePlus },
+        { label: "Stock Exits", to: "/stock-exits", icon: PackageMinus },
+        { label: "Stock Transfers", to: "/stock-transfers", icon: Repeat },
+        ...(canManageAdjustments(tenantRole)
+          ? [{ label: "Inventory Adjustments", to: "/inventory-adjustments", icon: ClipboardList }]
+          : []),
+        { label: "Kardex", to: "/kardex", icon: FileBarChart },
+        { label: "Inventory Valuation", to: "/inventory-valuation", icon: BarChart3 },
+      ],
+    },
+    {
+      title: "Catalog",
+      links: [
+        { label: "Warehouses", to: "/warehouses", icon: Warehouse },
+        { label: "Items", to: "/items", icon: Package },
+      ],
+    },
+    {
+      title: "Settings",
+      links: [
+        { label: "Tenant Users", to: "/tenant-memberships", icon: Users },
+        { label: "Invitations", to: "/tenant-invitations", icon: Mail },
+        { label: "Company Settings", to: "/tenant-settings", icon: Settings },
+        { label: "UFV Rates", to: "/ufv-rates", icon: Calculator },
+        ...(canViewAuditLogs(tenantRole)
+          ? [{ label: "Audit Logs", to: "/audit-logs", icon: FileClock },]
+          : []),
+      ],
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-100">
-      <aside className="fixed inset-y-0 left-0 w-64 bg-slate-950 text-white">
-        <div className="px-6 py-5">
-          <h1 className="text-xl font-bold">Exventory</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {tenantSlug ?? "No workspace"}
-          </p>
+      <aside
+        className={`fixed inset-y-0 left-0 flex flex-col bg-slate-950 text-white transition-all duration-300 ${
+          sidebarCollapsed ? "w-20" : "w-64"
+        }`}
+      >
+        <div className="flex h-20 items-center justify-between border-b border-white/10 px-4">
+          {!sidebarCollapsed && (
+            <div>
+              <h1 className="text-xl font-bold">Exventory</h1>
+              <p className="mt-1 max-w-40 truncate text-sm text-slate-400">
+                {tenantSlug ?? "No workspace"}
+              </p>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((value) => !value)}
+            className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/10"
+            title={sidebarCollapsed ? "Expand menu" : "Collapse menu"}
+          >
+            {sidebarCollapsed ? "☰" : "‹"}
+          </button>
         </div>
 
-        <nav className="mt-4 space-y-6 px-3">
-          {navGroups.map((group) => (
-            <div key={group.title}>
-              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {group.title}
-              </p>
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <div className="space-y-4">
+            {navGroups.map((group) => {
+              const isGroupCollapsed = collapsedGroups[group.title];
 
-              <div className="space-y-1">
-                {group.links.map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    className={({ isActive }) =>
-                      `block rounded-xl px-4 py-3 text-sm ${
-                        isActive
-                          ? "bg-white text-slate-950"
-                          : "text-slate-300 hover:bg-white/10"
-                      }`
-                    }
-                  >
-                    {link.label}
-                  </NavLink>
-                ))}
-              </div>
-            </div>
-          ))}
+              return (
+                <div key={group.title}>
+                  {!sidebarCollapsed && (
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.title)}
+                      className="mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 hover:bg-white/5"
+                    >
+                      <span>{group.title}</span>
+                      <span>{isGroupCollapsed ? "+" : "−"}</span>
+                    </button>
+                  )}
+
+                  {(!isGroupCollapsed || sidebarCollapsed) && (
+                    <div className="space-y-1">
+                      {group.links.map((link) => {
+                        const Icon = link.icon;
+
+                        return (
+                          <NavLink
+                            key={link.to}
+                            to={link.to}
+                            title={sidebarCollapsed ? link.label : undefined}
+                            className={({ isActive }) =>
+                              `flex items-center rounded-xl px-4 py-3 text-sm ${
+                                isActive
+                                  ? "bg-white text-slate-950"
+                                  : "text-slate-300 hover:bg-white/10"
+                              } ${sidebarCollapsed ? "justify-center" : "gap-3"}`
+                            }
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            {!sidebarCollapsed && <span>{link.label}</span>}
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </nav>
       </aside>
 
-      <div className="pl-64">
-        <header className="flex h-16 items-center justify-between border-b bg-white px-8">
+      <div
+        className={`transition-all duration-300 ${
+          sidebarCollapsed ? "pl-20" : "pl-64"
+        }`}
+      >
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-8">
           <span className="text-sm text-slate-500">
-            SaaS Inventory Platform by Examine S.R.L.
+            SaaS Inventory Platform
           </span>
 
           <div className="flex items-center gap-2">
