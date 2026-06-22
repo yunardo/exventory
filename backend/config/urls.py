@@ -122,7 +122,7 @@ urlpatterns = [
     path("api/tenant-settings/", TenantSettingsView.as_view(), name="tenant-settings"),
 
     path(
-        "ufv-revaluation/apply/",
+        "api/ufv-revaluation/apply/",
         UFVRevaluationApplyView.as_view(),
         name="ufv-revaluation-apply",
     ),
