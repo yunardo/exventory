@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTenant } from "../../context/TenantContext";
-import { getUFVRevaluationPreview } from "./api";
+import { applyUFVRevaluation, getUFVRevaluationPreview } from "./api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,10 @@ export function UFVRevaluationPreviewPage() {
   const [closingDate, setClosingDate] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
 
+  const queryClient = useQueryClient();
+  const [notes, setNotes] = useState("");
+  const [applyMessage, setApplyMessage] = useState("");
+
   const {
     data,
     isLoading,
@@ -42,6 +46,22 @@ export function UFVRevaluationPreviewPage() {
     if (!closingDate) return;
     setSelectedDate(closingDate);
   }
+
+  const applyMutation = useMutation({
+    mutationFn: applyUFVRevaluation,
+    onSuccess: (run) => {
+      setApplyMessage(`UFV revaluation applied successfully. Run #${run.id}`);
+      queryClient.invalidateQueries({
+        queryKey: ["audit-logs", tenantSlug],
+      });
+    },
+    onError: (error: any) => {
+      setApplyMessage(
+        error?.response?.data?.detail ||
+          "Could not apply UFV revaluation."
+      );
+    },
+  });
 
   return (
     <section className="space-y-6">
@@ -81,6 +101,52 @@ export function UFVRevaluationPreviewPage() {
           )}
         </CardContent>
       </Card>
+
+      {data && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Apply Revaluation</CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This will create a historical UFV revaluation run for the selected closing date.
+              It will not modify stock layer costs yet.
+            </p>
+
+            <Input
+              placeholder="Notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+
+            {applyMessage && (
+              <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm">
+                {applyMessage}
+              </p>
+            )}
+
+            <Button
+              variant="default"
+              disabled={applyMutation.isPending}
+              onClick={() => {
+                if (
+                  confirm(
+                    `Apply UFV revaluation for ${data.closing_date}? This action cannot be repeated for the same closing date.`
+                  )
+                ) {
+                  applyMutation.mutate({
+                    closing_date: data.closing_date,
+                    notes,
+                  });
+                }
+              }}
+            >
+              {applyMutation.isPending ? "Applying..." : "Apply Revaluation"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {data && (
         <>

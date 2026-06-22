@@ -33,3 +33,29 @@ export async function getUFVRevaluationPreview(closingDate: string) {
 
   return response.data;
 }
+
+export type UFVRevaluationRun = {
+  id: number;
+  closing_date: string;
+  closing_ufv: string;
+  total_original_value: string;
+  total_updated_value: string;
+  total_revaluation: string;
+  notes: string;
+  applied_by: number | null;
+  applied_by_username: string | null;
+  created_at: string;
+  lines: UFVRevaluationRow[];
+};
+
+export async function applyUFVRevaluation(payload: {
+  closing_date: string;
+  notes?: string;
+}) {
+  const response = await tenantApiClient.post<UFVRevaluationRun>(
+    "/api/ufv-revaluation/apply/",
+    payload
+  );
+
+  return response.data;
+}

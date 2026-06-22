@@ -10,6 +10,7 @@ from django.db import transaction
 from .models import StockEntry, StockExit, StockLayer, StockExitAllocation
 from .models import InventoryAdjustment, InventoryAdjustmentAllocation
 from .models import StockTransfer, StockTransferAllocation, UFVRate
+from .models import UFVRevaluationRun, UFVRevaluationRunLine
 
 
 
@@ -426,4 +427,61 @@ class UFVRateSerializer(serializers.ModelSerializer):
             "id",
             "date",
             "value",
+        ]
+
+
+class UFVRevaluationRunLineSerializer(serializers.ModelSerializer):
+    warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
+    item_code = serializers.CharField(source="item.code", read_only=True)
+    item_name = serializers.CharField(source="item.name", read_only=True)
+
+    class Meta:
+        model = UFVRevaluationRunLine
+        fields = [
+            "id",
+            "stock_layer",
+            "warehouse",
+            "warehouse_name",
+            "item",
+            "item_code",
+            "item_name",
+            "quantity",
+            "original_unit_cost",
+            "updated_unit_cost",
+            "purchase_ufv",
+            "closing_ufv",
+            "original_total",
+            "updated_total",
+            "revaluation_amount",
+        ]
+
+
+class UFVRevaluationRunSerializer(serializers.ModelSerializer):
+    lines = UFVRevaluationRunLineSerializer(many=True, read_only=True)
+    applied_by_username = serializers.CharField(
+        source="applied_by.username",
+        read_only=True,
+    )
+
+    class Meta:
+        model = UFVRevaluationRun
+        fields = [
+            "id",
+            "closing_date",
+            "closing_ufv",
+            "total_original_value",
+            "total_updated_value",
+            "total_revaluation",
+            "notes",
+            "applied_by",
+            "applied_by_username",
+            "created_at",
+            "lines",
+        ]
+        read_only_fields = [
+            "id",
+            "applied_by",
+            "applied_by_username",
+            "created_at",
+            "lines",
         ]

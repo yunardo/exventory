@@ -39,6 +39,34 @@ class UFVRate(TenantAwareModel):
         return f"{self.date} - {self.value}"
 
 
+class UFVRevaluationRun(TenantAwareModel):
+    closing_date = models.DateField()
+    closing_ufv = models.DecimalField(max_digits=12, decimal_places=5)
+
+    total_original_value = models.DecimalField(max_digits=18, decimal_places=2)
+    total_updated_value = models.DecimalField(max_digits=18, decimal_places=2)
+    total_revaluation = models.DecimalField(max_digits=18, decimal_places=2)
+
+    notes = models.TextField(blank=True)
+
+    applied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ufv_revaluation_runs",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-closing_date", "-id"]
+        unique_together = (("tenant", "closing_date"),)
+
+    def __str__(self):
+        return f"UFV Revaluation {self.closing_date}"
+
+
 class StockEntry(TenantAwareModel):
     warehouse = models.ForeignKey(
         Warehouse,
@@ -142,6 +170,48 @@ class StockLayer(TenantAwareModel):
 
     def __str__(self):
         return f"{self.item} - {self.remaining_quantity} @ {self.unit_cost}"
+
+
+class UFVRevaluationRunLine(TenantAwareModel):
+    run = models.ForeignKey(
+        UFVRevaluationRun,
+        on_delete=models.CASCADE,
+        related_name="lines",
+    )
+
+    stock_layer = models.ForeignKey(
+        StockLayer,
+        on_delete=models.PROTECT,
+        related_name="ufv_revaluation_lines",
+    )
+
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+    )
+
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+
+    original_unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    updated_unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+
+    purchase_ufv = models.DecimalField(max_digits=12, decimal_places=5)
+    closing_ufv = models.DecimalField(max_digits=12, decimal_places=5)
+
+    original_total = models.DecimalField(max_digits=18, decimal_places=2)
+    updated_total = models.DecimalField(max_digits=18, decimal_places=2)
+    revaluation_amount = models.DecimalField(max_digits=18, decimal_places=2)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.run_id} - {self.item_id} - {self.revaluation_amount}"
 
 
 class StockExitAllocation(TenantAwareModel):

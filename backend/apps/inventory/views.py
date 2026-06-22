@@ -1,3 +1,4 @@
+from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -10,6 +11,7 @@ from apps.core.audit import log_audit_event
 from .models import Warehouse, Item, StockEntry, StockExit
 from .models import StockLayer, InventoryAdjustment
 from .models import StockTransfer, UFVRate
+from .models import UFVRevaluationRun, UFVRevaluationRunLine
 from .serializers import StockTransferSerializer
 from .serializers import WarehouseSerializer
 from .serializers import ItemSerializer
@@ -17,6 +19,8 @@ from .serializers import StockEntrySerializer
 from .serializers import StockExitSerializer
 from .serializers import InventoryAdjustmentSerializer
 from .serializers import UFVRateSerializer
+from .serializers import UFVRevaluationRunSerializer
+from django.db import transaction, IntegrityError
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
 
@@ -1053,3 +1057,130 @@ class UFVRevaluationPreviewView(TenantRequiredMixin, APIView):
             "total_revaluation": str(total_revaluation.quantize(Decimal("0.01"))),
             "rows": rows,
         })
+
+
+class UFVRevaluationApplyView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    @transaction.atomic
+    def post(self, request):
+        closing_date = request.data.get("closing_date")
+        notes = request.data.get("notes", "")
+
+        if not closing_date:
+            return Response(
+                {"detail": "closing_date is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        closing_ufv = UFVRate.objects.filter(date=closing_date).first()
+
+        if not closing_ufv:
+            return Response(
+                {"detail": "UFV rate for closing_date was not found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        layers = (
+            StockLayer.objects
+            .select_related("warehouse", "item")
+            .filter(
+                remaining_quantity__gt=0,
+                ufv_value__isnull=False,
+            )
+            .order_by("warehouse__name", "item__code", "entry_date", "id")
+        )
+
+        if not layers.exists():
+            return Response(
+                {"detail": "No stock layers with UFV value found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        total_original_value = Decimal("0")
+        total_updated_value = Decimal("0")
+        total_revaluation = Decimal("0")
+        calculated_lines = []
+
+        for layer in layers:
+            original_total = layer.remaining_quantity * layer.unit_cost
+            updated_unit_cost = layer.unit_cost * (
+                closing_ufv.value / layer.ufv_value
+            )
+            updated_total = layer.remaining_quantity * updated_unit_cost
+            revaluation_amount = updated_total - original_total
+
+            total_original_value += original_total
+            total_updated_value += updated_total
+            total_revaluation += revaluation_amount
+
+            calculated_lines.append({
+                "layer": layer,
+                "quantity": layer.remaining_quantity,
+                "original_unit_cost": layer.unit_cost,
+                "updated_unit_cost": updated_unit_cost,
+                "purchase_ufv": layer.ufv_value,
+                "closing_ufv": closing_ufv.value,
+                "original_total": original_total,
+                "updated_total": updated_total,
+                "revaluation_amount": revaluation_amount,
+            })
+
+        try:
+            run = UFVRevaluationRun.objects.create(
+                tenant=request.tenant,
+                closing_date=closing_date,
+                closing_ufv=closing_ufv.value,
+                total_original_value=total_original_value,
+                total_updated_value=total_updated_value,
+                total_revaluation=total_revaluation,
+                notes=notes,
+                applied_by=request.user,
+            )
+        except IntegrityError:
+            return Response(
+                {
+                    "detail": "UFV revaluation has already been applied for this closing date."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for line in calculated_lines:
+            layer = line["layer"]
+
+            UFVRevaluationRunLine.objects.create(
+                tenant=request.tenant,
+                run=run,
+                stock_layer=layer,
+                warehouse=layer.warehouse,
+                item=layer.item,
+                quantity=line["quantity"],
+                original_unit_cost=line["original_unit_cost"],
+                updated_unit_cost=line["updated_unit_cost"],
+                purchase_ufv=line["purchase_ufv"],
+                closing_ufv=line["closing_ufv"],
+                original_total=line["original_total"],
+                updated_total=line["updated_total"],
+                revaluation_amount=line["revaluation_amount"],
+            )
+
+        serializer = UFVRevaluationRunSerializer(run)
+
+        log_audit_event(
+            request=request,
+            action="apply",
+            entity="UFVRevaluationRun",
+            entity_id=run.id,
+            status_code=201,
+            meta={
+                "closing_date": closing_date,
+                "total_revaluation": str(total_revaluation.quantize(Decimal("0.01"))),
+            },
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

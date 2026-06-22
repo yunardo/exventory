@@ -38,6 +38,7 @@ from apps.inventory.views import CurrentStockPdfView
 from apps.inventory.views import KardexPdfView
 from apps.inventory.views import UFVRateViewSet
 from apps.inventory.views import UFVRevaluationPreviewView
+from apps.inventory.views import UFVRevaluationApplyView
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
@@ -119,6 +120,12 @@ urlpatterns = [
 
     path("api/audit-logs/options/", AuditLogOptionsView.as_view(), name="audit-log-options"),
     path("api/tenant-settings/", TenantSettingsView.as_view(), name="tenant-settings"),
+
+    path(
+        "ufv-revaluation/apply/",
+        UFVRevaluationApplyView.as_view(),
+        name="ufv-revaluation-apply",
+    ),
 
     path(
         "api/ufv-revaluation/preview/",
