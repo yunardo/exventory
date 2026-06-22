@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from apps.core.audit_models import AuditLog
-from apps.core.audit import log_audit_event
 
 @dataclass(frozen=True)
 class AuditActions:
