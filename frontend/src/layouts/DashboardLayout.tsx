@@ -13,7 +13,6 @@ import {
   FileBarChart,
   FileClock,
   Home,
-  Landmark,
   Package,
   PackageMinus,
   PackagePlus,
@@ -187,7 +186,7 @@ export function DashboardLayout() {
       >
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-8">
           <span className="text-sm text-slate-500">
-            SaaS Inventory Platform
+            SaaS Inventory Platform by Examine S.R.L.
           </span>
 
           <div className="flex items-center gap-2">
