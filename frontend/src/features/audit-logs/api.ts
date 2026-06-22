@@ -2,6 +2,8 @@ import { tenantApiClient } from "../../api/tenantClient";
 
 export type AuditLogMeta = {
   data?: Record<string, unknown>;
+  format?: string;
+  params?: Record<string, unknown>;
 };
 
 export type AuditLog = {

@@ -199,8 +199,8 @@ export function AuditLogsPage() {
                         onClick={() => setExpandedId(isExpanded ? null : log.id)}
                       >
                         <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
-                        <TableCell>{log.user ?? "-"}</TableCell>
                         <TableCell>{log.action}</TableCell>
+                        <TableCell>{log.user ?? "-"}</TableCell>
                         <TableCell>{log.entity}</TableCell>
                         <TableCell>{log.entity_id}</TableCell>
                         <TableCell>{log.method}</TableCell>
@@ -223,6 +223,19 @@ export function AuditLogsPage() {
 
                               <div className="mt-4">
                                 <p className="mb-2 text-sm font-semibold">Data</p>
+                                
+                                {log.action === "export" && (
+                                  <div className="mb-4 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
+                                    <p className="font-semibold">Report export</p>
+                                    <p>Report: {log.entity}</p>
+                                    <p>Format: {(log.meta?.format as string) ?? "-"}</p>
+                                  </div>
+                                )}
+                                {log.action === "export" && log.meta?.params && (
+                                  <pre className="mt-2 rounded-lg bg-blue-100 p-3 text-xs">
+                                    {JSON.stringify(log.meta.params, null, 2)}
+                                  </pre>
+                                )}
 
                                 {metaData ? (
                                   <pre className="max-h-96 overflow-auto rounded-lg bg-slate-900 p-4 text-xs text-white">
