@@ -49,8 +49,9 @@ export function DashboardLayout() {
             links: [
               { label: "Tenant Users", to: "/tenant-memberships" },
               { label: "Invitations", to: "/tenant-invitations" },
-              { label: "Audit Logs", to: "/audit-logs" },
+              { label: "UFV Rates", to: "/ufv-rates" },
               { label: "Company Settings", to: "/tenant-settings" },
+              { label: "Audit Logs", to: "/audit-logs" },
             ],
           },
         ]

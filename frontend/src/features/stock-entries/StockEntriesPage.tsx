@@ -240,6 +240,7 @@ export function StockEntriesPage() {
                   <TableHead>Item</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Unit Cost</TableHead>
+                  <TableHead className="text-right">UFV</TableHead>
                   <TableHead>Reference</TableHead>
                 </TableRow>
               </TableHeader>
@@ -254,6 +255,9 @@ export function StockEntriesPage() {
                     </TableCell>
                     <TableCell>{entry.quantity}</TableCell>
                     <TableCell>{entry.unit_cost}</TableCell>
+                    <TableCell className="text-right">
+                      {entry.ufv_value ?? "-"}
+                    </TableCell>
                     <TableCell>{entry.reference || "-"}</TableCell>
                   </TableRow>
                 ))}

@@ -22,6 +22,7 @@ import { TenantMembershipsPage } from "@/features/tenant-memberships/TenantMembe
 import { AcceptInvitationPage } from "@/features/invitations/AcceptInvitationPage";
 import { TenantInvitationsPage } from "@/features/tenant-memberships/TenantInvitationsPage";
 import { TenantSettingsPage } from "@/features/tenant-settings/TenantSettingsPage";
+import { UFVRatesPage } from "@/features/ufv-rates/UFVRatesPage";
 
 export function AppRoutes() {
   return (
@@ -53,6 +54,7 @@ export function AppRoutes() {
                 <Route path="/audit-logs" element={<AuditLogsPage />} />
                 <Route path="/tenant-invitations" element={<TenantInvitationsPage />} />
                 <Route path="/tenant-settings" element={<TenantSettingsPage />} />
+                <Route path="/ufv-rates" element={<UFVRatesPage />} />
               </Route>
             </Route>
           </Route>

@@ -10,6 +10,8 @@ export type StockEntry = {
   item_name: string;
   quantity: string;
   unit_cost: string;
+  ufv_rate: number | null;
+  ufv_value: string | null;
   reference: string;
   entry_date: string;
   notes: string;

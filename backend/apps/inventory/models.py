@@ -26,6 +26,19 @@ class Item(TenantAwareModel):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
+
+class UFVRate(TenantAwareModel):
+    date = models.DateField()
+    value = models.DecimalField(max_digits=12, decimal_places=5)
+
+    class Meta:
+        ordering = ["-date"]
+        unique_together = (("tenant", "date"),)
+
+    def __str__(self):
+        return f"{self.date} - {self.value}"
+
+
 class StockEntry(TenantAwareModel):
     warehouse = models.ForeignKey(
         Warehouse,
@@ -45,6 +58,21 @@ class StockEntry(TenantAwareModel):
     entry_date = models.DateField()
 
     notes = models.TextField(blank=True)
+
+    ufv_rate = models.ForeignKey(
+        UFVRate,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="stock_entries",
+    )
+
+    ufv_value = models.DecimalField(
+        max_digits=12,
+        decimal_places=5,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["-entry_date", "-id"]
@@ -246,15 +274,3 @@ class StockTransferAllocation(TenantAwareModel):
 
     def __str__(self):
         return f"{self.stock_transfer_id} -> {self.stock_layer_id} ({self.quantity})"
-
-
-class UFVRate(TenantAwareModel):
-    date = models.DateField()
-    value = models.DecimalField(max_digits=12, decimal_places=5)
-
-    class Meta:
-        ordering = ["-date"]
-        unique_together = (("tenant", "date"),)
-
-    def __str__(self):
-        return f"{self.date} - {self.value}"

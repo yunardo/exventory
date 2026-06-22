@@ -64,8 +64,19 @@ class StockEntryViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     
     def perform_create(self, serializer):
         tenant = self.request.tenant
+        entry_date = serializer.validated_data.get("entry_date")
 
-        stock_entry = serializer.save(tenant=tenant)
+        ufv_rate = (
+            UFVRate.objects
+            .filter(tenant=tenant, date=entry_date)
+            .first()
+        )
+
+        stock_entry = serializer.save(
+            tenant=tenant,
+            ufv_rate=ufv_rate,
+            ufv_value=ufv_rate.value if ufv_rate else None,
+        )
 
         StockLayer.objects.create(
             tenant=tenant,

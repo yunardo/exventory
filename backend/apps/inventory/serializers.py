@@ -35,6 +35,11 @@ class StockEntrySerializer(serializers.ModelSerializer):
     warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
     item_code = serializers.CharField(source="item.code", read_only=True)
     item_name = serializers.CharField(source="item.name", read_only=True)
+    ufv_value = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=5,
+        read_only=True,
+    )
 
     class Meta:
         model = StockEntry
@@ -47,10 +52,13 @@ class StockEntrySerializer(serializers.ModelSerializer):
             "item_name",
             "quantity",
             "unit_cost",
+            "ufv_rate",
+            "ufv_value",
             "reference",
             "entry_date",
             "notes",
         ]
+        # read_only_fields = ["ufv_rate", "ufv_value"]
 
 class StockExitSerializer(serializers.ModelSerializer):
     warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
