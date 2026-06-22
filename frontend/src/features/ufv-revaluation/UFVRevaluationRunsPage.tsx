@@ -17,9 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export function UFVRevaluationRunsPage() {
   const { tenantSlug } = useTenant();
+  const navigate = useNavigate();
 
   const {
     data: runs = [],
@@ -72,6 +75,7 @@ export function UFVRevaluationRunsPage() {
                   <TableHead className="text-right">Revaluation</TableHead>
                   <TableHead>Applied By</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -92,6 +96,15 @@ export function UFVRevaluationRunsPage() {
                     <TableCell>{run.applied_by_username ?? "-"}</TableCell>
                     <TableCell>
                       {new Date(run.created_at).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/ufv-revaluation-runs/${run.id}`)}
+                      >
+                        View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

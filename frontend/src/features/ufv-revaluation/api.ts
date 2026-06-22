@@ -1,7 +1,10 @@
-import { unwrapPaginatedResponse, type PaginatedResponse } from "@/api/pagination";
 import { tenantApiClient } from "../../api/tenantClient";
+import {
+  type PaginatedResponse,
+  unwrapPaginatedResponse,
+} from "../../api/pagination";
 
-export type UFVRevaluationRow = {
+export type UFVRevaluationPreviewRow = {
   warehouse_id: number;
   warehouse_name: string;
   item_id: number;
@@ -24,16 +27,26 @@ export type UFVRevaluationPreview = {
   total_original_value: string;
   total_updated_value: string;
   total_revaluation: string;
-  rows: UFVRevaluationRow[];
+  rows: UFVRevaluationPreviewRow[];
 };
 
-export async function getUFVRevaluationPreview(closingDate: string) {
-  const response = await tenantApiClient.get<UFVRevaluationPreview>(
-    `/api/ufv-revaluation/preview/?closing_date=${closingDate}`
-  );
-
-  return response.data;
-}
+export type UFVRevaluationRunLine = {
+  id: number;
+  stock_layer: number;
+  warehouse: number;
+  warehouse_name: string;
+  item: number;
+  item_code: string;
+  item_name: string;
+  quantity: string;
+  original_unit_cost: string;
+  updated_unit_cost: string;
+  purchase_ufv: string;
+  closing_ufv: string;
+  original_total: string;
+  updated_total: string;
+  revaluation_amount: string;
+};
 
 export type UFVRevaluationRun = {
   id: number;
@@ -46,8 +59,16 @@ export type UFVRevaluationRun = {
   applied_by: number | null;
   applied_by_username: string | null;
   created_at: string;
-  lines: UFVRevaluationRow[];
+  lines: UFVRevaluationRunLine[];
 };
+
+export async function getUFVRevaluationPreview(closingDate: string) {
+  const response = await tenantApiClient.get<UFVRevaluationPreview>(
+    `/api/ufv-revaluation/preview/?closing_date=${closingDate}`
+  );
+
+  return response.data;
+}
 
 export async function applyUFVRevaluation(payload: {
   closing_date: string;
@@ -67,4 +88,12 @@ export async function getUFVRevaluationRuns() {
   >("/api/ufv-revaluation-runs/");
 
   return unwrapPaginatedResponse(response.data);
+}
+
+export async function getUFVRevaluationRun(id: number) {
+  const response = await tenantApiClient.get<UFVRevaluationRun>(
+    `/api/ufv-revaluation-runs/${id}/`
+  );
+
+  return response.data;
 }
