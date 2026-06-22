@@ -270,3 +270,76 @@ def build_kardex_pdf(tenant, rows, user=None):
     elements.append(table)
 
     return build_pdf_buffer(elements)
+
+
+def build_ufv_revaluation_run_pdf(tenant, run, user=None):
+    styles = getSampleStyleSheet()
+    elements = []
+
+    add_pdf_tenant_header(
+        elements,
+        tenant,
+        styles,
+        "UFV Revaluation Run Report",
+        user=user,
+    )
+
+    elements.append(Paragraph(f"Closing Date: {run.closing_date}", styles["Normal"]))
+    elements.append(Paragraph(f"Closing UFV: {run.closing_ufv}", styles["Normal"]))
+    elements.append(Paragraph(f"Applied By: {run.applied_by.get_username() if run.applied_by else '-'}", styles["Normal"]))
+    elements.append(Spacer(1, 12))
+
+    table_data = [[
+        "Warehouse",
+        "Item",
+        "Qty",
+        "Purchase UFV",
+        "Closing UFV",
+        "Original",
+        "Updated",
+        "Revaluation",
+    ]]
+
+    for line in run.lines.all():
+        table_data.append([
+            line.warehouse.name,
+            f"{line.item.code} - {line.item.name}",
+            str(line.quantity),
+            str(line.purchase_ufv),
+            str(line.closing_ufv),
+            str(line.original_total),
+            str(line.updated_total),
+            str(line.revaluation_amount),
+        ])
+
+    table_data.append([
+        "TOTAL",
+        "",
+        "",
+        "",
+        "",
+        str(run.total_original_value),
+        str(run.total_updated_value),
+        str(run.total_revaluation),
+    ])
+
+    table = Table(
+        table_data,
+        colWidths=[85, 150, 45, 65, 65, 65, 65, 70],
+        repeatRows=1,
+    )
+
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1E293B")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 7),
+        ("ALIGN", (2, 1), (-1, -1), "RIGHT"),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#F1F5F9")),
+    ]))
+
+    elements.append(table)
+
+    return build_pdf_buffer(elements)

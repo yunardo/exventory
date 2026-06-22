@@ -33,6 +33,7 @@ from apps.core.excel import add_tenant_report_header
 from apps.core.pdf import build_inventory_valuation_pdf
 from apps.core.pdf import build_current_stock_pdf
 from apps.core.pdf import build_kardex_pdf
+from apps.core.pdf import build_ufv_revaluation_run_pdf
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -1311,6 +1312,53 @@ class UFVRevaluationRunExportView(TenantRequiredMixin, APIView):
         )
         http_response["Content-Disposition"] = (
             f'attachment; filename="ufv_revaluation_run_{run.id}.xlsx"'
+        )
+
+        return http_response
+
+
+class UFVRevaluationRunPdfView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    def get(self, request, pk):
+        run = (
+            UFVRevaluationRun.objects
+            .select_related("applied_by")
+            .prefetch_related("lines__warehouse", "lines__item")
+            .filter(pk=pk)
+            .first()
+        )
+
+        if not run:
+            return Response({"detail": "UFV revaluation run not found."}, status=404)
+
+        pdf = build_ufv_revaluation_run_pdf(
+            tenant=request.tenant,
+            run=run,
+            user=request.user,
+        )
+
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="UFVRevaluationRunPdf",
+            entity_id=run.id,
+            status_code=200,
+            meta={
+                "format": "pdf",
+                "run_id": run.id,
+                "closing_date": str(run.closing_date),
+            },
+        )
+
+        http_response = HttpResponse(pdf, content_type="application/pdf")
+        http_response["Content-Disposition"] = (
+            f'attachment; filename="ufv_revaluation_run_{run.id}.pdf"'
         )
 
         return http_response

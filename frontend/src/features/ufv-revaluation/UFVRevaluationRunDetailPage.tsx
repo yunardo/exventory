@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTenant } from "../../context/TenantContext";
-import { exportUFVRevaluationRunExcel, getUFVRevaluationRun } from "./api";
+import { exportUFVRevaluationRunExcel, exportUFVRevaluationRunPdf, getUFVRevaluationRun } from "./api";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +55,13 @@ export function UFVRevaluationRunDetailPage() {
           onClick={() => exportUFVRevaluationRunExcel(runId)}
         >
           Export Excel
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={() => exportUFVRevaluationRunPdf(runId)}
+        >
+          Export PDF
         </Button>
 
         <Button variant="outline" onClick={() => navigate("/ufv-revaluation-runs")}>
