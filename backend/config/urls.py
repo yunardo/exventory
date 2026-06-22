@@ -40,6 +40,7 @@ from apps.inventory.views import UFVRateViewSet
 from apps.inventory.views import UFVRevaluationPreviewView
 from apps.inventory.views import UFVRevaluationApplyView
 from apps.inventory.views import UFVRevaluationRunViewSet
+from apps.inventory.views import UFVRevaluationRunExportView
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
@@ -153,6 +154,11 @@ urlpatterns = [
         "api/kardex/pdf/",
         KardexPdfView.as_view(),
         name="kardex-pdf",
+    ),
+    path(
+        "ufv-revaluation-runs/<int:pk>/export/",
+        UFVRevaluationRunExportView.as_view(),
+        name="ufv-revaluation-run-export",
     ),
 
     path("api/", include(router.urls)),

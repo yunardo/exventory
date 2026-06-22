@@ -97,3 +97,23 @@ export async function getUFVRevaluationRun(id: number) {
 
   return response.data;
 }
+
+export async function exportUFVRevaluationRunExcel(id: number) {
+  const response = await tenantApiClient.get(
+    `/api/ufv-revaluation-runs/${id}/export/`,
+    {
+      responseType: "blob",
+    }
+  );
+
+  const url = window.URL.createObjectURL(response.data);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `ufv_revaluation_run_${id}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}

@@ -1202,3 +1202,115 @@ class UFVRevaluationRunViewSet(TenantRequiredMixin, ReadOnlyModelViewSet):
             .prefetch_related("lines")
             .all()
         )
+
+
+class UFVRevaluationRunExportView(TenantRequiredMixin, APIView):
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    def get(self, request, pk):
+        run = (
+            UFVRevaluationRun.objects
+            .select_related("applied_by")
+            .prefetch_related(
+                "lines__warehouse",
+                "lines__item",
+            )
+            .filter(pk=pk)
+            .first()
+        )
+
+        if not run:
+            return Response({"detail": "UFV revaluation run not found."}, status=404)
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "UFV Revaluation"
+
+        add_tenant_report_header(ws, request.tenant)
+
+        ws.append(["UFV Revaluation Run"])
+        ws.append(["Closing Date", run.closing_date])
+        ws.append(["Closing UFV", str(run.closing_ufv)])
+        ws.append(["Applied By", run.applied_by.get_username() if run.applied_by else "-"])
+        ws.append(["Created At", run.created_at.strftime("%Y-%m-%d %H:%M")])
+        ws.append([])
+
+        headers = [
+            "Warehouse",
+            "Item Code",
+            "Item Name",
+            "Quantity",
+            "Purchase UFV",
+            "Closing UFV",
+            "Original Unit Cost",
+            "Updated Unit Cost",
+            "Original Total",
+            "Updated Total",
+            "Revaluation Amount",
+        ]
+
+        ws.append(headers)
+
+        header_fill = PatternFill("solid", fgColor="1E293B")
+        header_font = Font(color="FFFFFF", bold=True)
+
+        for cell in ws[ws.max_row]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+
+        for line in run.lines.all():
+            ws.append([
+                line.warehouse.name,
+                line.item.code,
+                line.item.name,
+                str(line.quantity),
+                str(line.purchase_ufv),
+                str(line.closing_ufv),
+                str(line.original_unit_cost),
+                str(line.updated_unit_cost),
+                str(line.original_total),
+                str(line.updated_total),
+                str(line.revaluation_amount),
+            ])
+
+        ws.append([])
+        ws.append(["TOTAL ORIGINAL VALUE", str(run.total_original_value)])
+        ws.append(["TOTAL UPDATED VALUE", str(run.total_updated_value)])
+        ws.append(["TOTAL REVALUATION", str(run.total_revaluation)])
+
+        for column_cells in ws.columns:
+            max_length = max(len(str(cell.value or "")) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = max_length + 2
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        log_audit_event(
+            request=request,
+            action="export",
+            entity="UFVRevaluationRunExport",
+            entity_id=run.id,
+            status_code=200,
+            meta={
+                "format": "xlsx",
+                "run_id": run.id,
+                "closing_date": str(run.closing_date),
+            },
+        )
+
+        http_response = HttpResponse(
+            output,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        http_response["Content-Disposition"] = (
+            f'attachment; filename="ufv_revaluation_run_{run.id}.xlsx"'
+        )
+
+        return http_response
