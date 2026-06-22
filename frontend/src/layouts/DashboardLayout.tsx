@@ -76,6 +76,7 @@ export function DashboardLayout() {
         { label: "Stock Entries", to: "/stock-entries", icon: PackagePlus },
         { label: "Entry Documents", to: "/stock-entry-documents", icon: PackagePlus },
         { label: "Stock Exits", to: "/stock-exits", icon: PackageMinus },
+        { label: "Exit Documents", to: "/stock-exit-documents", icon: PackageMinus },
         { label: "Stock Transfers", to: "/stock-transfers", icon: Repeat },
         ...(canManageAdjustments(tenantRole)
           ? [{ label: "Inventory Adjustments", to: "/inventory-adjustments", icon: ClipboardList }]
