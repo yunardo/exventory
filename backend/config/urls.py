@@ -42,6 +42,7 @@ from apps.inventory.views import UFVRevaluationApplyView
 from apps.inventory.views import UFVRevaluationRunViewSet
 from apps.inventory.views import UFVRevaluationRunExportView
 from apps.inventory.views import UFVRevaluationRunPdfView
+from apps.inventory.views import StockEntryDocumentViewSet, StockExitDocumentViewSet
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
 from apps.core.views import AuditLogViewSet, AuthMeView, AuditLogOptionsView
@@ -97,6 +98,17 @@ router.register(
     r"ufv-revaluation-runs",
     UFVRevaluationRunViewSet,
     basename="ufv-revaluation-runs",
+)
+router.register(
+    r"stock-entry-documents",
+    StockEntryDocumentViewSet,
+    basename="stock-entry-documents",
+)
+
+router.register(
+    r"stock-exit-documents",
+    StockExitDocumentViewSet,
+    basename="stock-exit-documents",
 )
 
 urlpatterns = [

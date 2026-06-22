@@ -165,6 +165,14 @@ class StockLayer(TenantAwareModel):
         blank=True,
     )
 
+    stock_entry_line = models.OneToOneField(
+        "StockEntryLine",
+        on_delete=models.CASCADE,
+        related_name="stock_layer",
+        null=True,
+        blank=True,
+    )
+
     class Meta:
         ordering = ["entry_date", "id"]
 
@@ -351,3 +359,191 @@ class StockTransferAllocation(TenantAwareModel):
 
     def __str__(self):
         return f"{self.stock_transfer_id} -> {self.stock_layer_id} ({self.quantity})"
+
+
+class StockEntryDocument(TenantAwareModel):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        CONFIRMED = "confirmed", "Confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    document_type = models.CharField(max_length=50)
+    document_number = models.CharField(max_length=120)
+
+    supplier_name = models.CharField(max_length=200)
+    supplier_tax_id = models.CharField(max_length=50, blank=True)
+
+    entry_date = models.DateField()
+    reason = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
+    total_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=0,
+    )
+
+    document_pdf = models.FileField(
+        upload_to="stock_entry_documents/",
+        null=True,
+        blank=True,
+    )
+
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-entry_date", "-id"]
+
+    def __str__(self):
+        return f"{self.document_type} {self.document_number}"
+
+
+class StockEntryLine(TenantAwareModel):
+    document = models.ForeignKey(
+        StockEntryDocument,
+        on_delete=models.CASCADE,
+        related_name="lines",
+    )
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="entry_lines",
+    )
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+        related_name="entry_lines",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    total_cost = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+
+    ufv_rate = models.ForeignKey(
+        "UFVRate",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="stock_entry_lines",
+    )
+    ufv_value = models.DecimalField(
+        max_digits=12,
+        decimal_places=5,
+        null=True,
+        blank=True,
+    )
+
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["id"]
+
+    def save(self, *args, **kwargs):
+        self.total_cost = self.quantity * self.unit_cost
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.document_id} - {self.item_id} - {self.quantity}"
+
+
+class StockExitDocument(TenantAwareModel):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        CONFIRMED = "confirmed", "Confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    document_type = models.CharField(max_length=50)
+    document_number = models.CharField(max_length=120)
+
+    requester_name = models.CharField(max_length=200)
+    requesting_unit = models.CharField(max_length=200)
+    responsible_name = models.CharField(max_length=200, blank=True)
+
+    exit_date = models.DateField()
+    reason = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
+    total_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=0,
+    )
+
+    document_pdf = models.FileField(
+        upload_to="stock_exit_documents/",
+        null=True,
+        blank=True,
+    )
+
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-exit_date", "-id"]
+
+    def __str__(self):
+        return f"{self.document_type} {self.document_number}"
+
+
+class StockExitLine(TenantAwareModel):
+    document = models.ForeignKey(
+        StockExitDocument,
+        on_delete=models.CASCADE,
+        related_name="lines",
+    )
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="exit_lines",
+    )
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.PROTECT,
+        related_name="exit_lines",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    total_cost = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.document_id} - {self.item_id} - {self.quantity}"
+
+
+class StockExitLineAllocation(TenantAwareModel):
+    stock_exit_line = models.ForeignKey(
+        StockExitLine,
+        on_delete=models.CASCADE,
+        related_name="allocations",
+    )
+    stock_layer = models.ForeignKey(
+        StockLayer,
+        on_delete=models.PROTECT,
+        related_name="exit_line_allocations",
+    )
+
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.stock_exit_line_id} -> {self.stock_layer_id}"

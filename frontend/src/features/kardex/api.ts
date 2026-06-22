@@ -8,7 +8,9 @@ export type KardexRow = {
     | "ADJUSTMENT_POSITIVE"
     | "ADJUSTMENT_NEGATIVE"
     | "TRANSFER_IN"
-    | "TRANSFER_OUT";
+    | "TRANSFER_OUT"
+    | "ENTRY_DOCUMENT"
+    | "EXIT_DOCUMENT";
   reference: string;
   entry_quantity: string;
   exit_quantity: string;

@@ -11,6 +11,15 @@ from .models import StockEntry, StockExit, StockLayer, StockExitAllocation
 from .models import InventoryAdjustment, InventoryAdjustmentAllocation
 from .models import StockTransfer, StockTransferAllocation, UFVRate
 from .models import UFVRevaluationRun, UFVRevaluationRunLine
+from .models import UFVRate
+
+from .models import (
+    StockEntryDocument,
+    StockEntryLine,
+    StockExitDocument,
+    StockExitLine,
+    StockExitLineAllocation,
+)
 
 
 
@@ -485,3 +494,240 @@ class UFVRevaluationRunSerializer(serializers.ModelSerializer):
             "created_at",
             "lines",
         ]
+
+
+class StockEntryLineSerializer(serializers.ModelSerializer):
+    warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
+    item_code = serializers.CharField(source="item.code", read_only=True)
+    item_name = serializers.CharField(source="item.name", read_only=True)
+
+    class Meta:
+        model = StockEntryLine
+        fields = [
+            "id",
+            "warehouse",
+            "warehouse_name",
+            "item",
+            "item_code",
+            "item_name",
+            "quantity",
+            "unit_cost",
+            "total_cost",
+            "ufv_rate",
+            "ufv_value",
+            "notes",
+        ]
+        read_only_fields = [
+            "id",
+            "total_cost",
+            "ufv_rate",
+            "ufv_value",
+        ]
+
+
+class StockEntryDocumentSerializer(serializers.ModelSerializer):
+    lines = StockEntryLineSerializer(many=True)
+
+    class Meta:
+        model = StockEntryDocument
+        fields = [
+            "id",
+            "document_type",
+            "document_number",
+            "supplier_name",
+            "supplier_tax_id",
+            "entry_date",
+            "reason",
+            "notes",
+            "status",
+            "total_amount",
+            "document_pdf",
+            "cancelled_at",
+            "cancellation_reason",
+            "lines",
+        ]
+        read_only_fields = [
+            "id",
+            "status",
+            "total_amount",
+            "cancelled_at",
+            "cancellation_reason",
+        ]
+
+    def create(self, validated_data):
+        lines_data = validated_data.pop("lines", [])
+        tenant = validated_data.get("tenant") or self.context["request"].tenant
+
+        document = StockEntryDocument.objects.create(**validated_data)
+
+        for line_data in lines_data:
+            entry_date = document.entry_date
+
+            ufv_rate = (
+                UFVRate.objects
+                .filter(tenant=tenant, date=entry_date)
+                .first()
+            )
+
+            StockEntryLine.objects.create(
+                tenant=tenant,
+                document=document,
+                ufv_rate=ufv_rate,
+                ufv_value=ufv_rate.value if ufv_rate else None,
+                **line_data,
+            )
+
+        self._recalculate_total(document)
+
+        return document
+
+    def update(self, instance, validated_data):
+        lines_data = validated_data.pop("lines", None)
+
+        if instance.status != StockEntryDocument.Status.DRAFT:
+            raise serializers.ValidationError({
+                "detail": "Only draft documents can be edited."
+            })
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        if lines_data is not None:
+            instance.lines.all().delete()
+
+            tenant = instance.tenant
+
+            for line_data in lines_data:
+                ufv_rate = (
+                    UFVRate.objects
+                    .filter(tenant=tenant, date=instance.entry_date)
+                    .first()
+                )
+
+                StockEntryLine.objects.create(
+                    tenant=tenant,
+                    document=instance,
+                    ufv_rate=ufv_rate,
+                    ufv_value=ufv_rate.value if ufv_rate else None,
+                    **line_data,
+                )
+
+        self._recalculate_total(instance)
+
+        return instance
+
+    def _recalculate_total(self, document):
+        total = sum(
+            (line.total_cost for line in document.lines.all()),
+            Decimal("0"),
+        )
+
+        document.total_amount = total
+        document.save(update_fields=["total_amount"])
+
+
+class StockExitLineSerializer(serializers.ModelSerializer):
+    warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
+    item_code = serializers.CharField(source="item.code", read_only=True)
+    item_name = serializers.CharField(source="item.name", read_only=True)
+
+    class Meta:
+        model = StockExitLine
+        fields = [
+            "id",
+            "warehouse",
+            "warehouse_name",
+            "item",
+            "item_code",
+            "item_name",
+            "quantity",
+            "total_cost",
+            "notes",
+        ]
+        read_only_fields = [
+            "id",
+            "total_cost",
+        ]
+
+
+class StockExitDocumentSerializer(serializers.ModelSerializer):
+    lines = StockExitLineSerializer(many=True)
+
+    class Meta:
+        model = StockExitDocument
+        fields = [
+            "id",
+            "document_type",
+            "document_number",
+            "requester_name",
+            "requesting_unit",
+            "responsible_name",
+            "exit_date",
+            "reason",
+            "notes",
+            "status",
+            "total_amount",
+            "document_pdf",
+            "cancelled_at",
+            "cancellation_reason",
+            "lines",
+        ]
+        read_only_fields = [
+            "id",
+            "status",
+            "total_amount",
+            "cancelled_at",
+            "cancellation_reason",
+        ]
+
+    def validate(self, attrs):
+        lines_data = attrs.get("lines", [])
+
+        if not lines_data:
+            raise serializers.ValidationError({
+                "lines": "At least one line is required."
+            })
+
+        return attrs
+
+    def create(self, validated_data):
+        lines_data = validated_data.pop("lines", [])
+        tenant = validated_data.get("tenant") or self.context["request"].tenant
+
+        document = StockExitDocument.objects.create(**validated_data)
+
+        for line_data in lines_data:
+            StockExitLine.objects.create(
+                tenant=tenant,
+                document=document,
+                **line_data,
+            )
+
+        return document
+
+    def update(self, instance, validated_data):
+        lines_data = validated_data.pop("lines", None)
+
+        if instance.status != StockExitDocument.Status.DRAFT:
+            raise serializers.ValidationError({
+                "detail": "Only draft documents can be edited."
+            })
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        if lines_data is not None:
+            instance.lines.all().delete()
+
+            for line_data in lines_data:
+                StockExitLine.objects.create(
+                    tenant=instance.tenant,
+                    document=instance,
+                    **line_data,
+                )
+
+        return instance

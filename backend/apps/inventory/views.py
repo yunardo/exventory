@@ -12,6 +12,13 @@ from .models import Warehouse, Item, StockEntry, StockExit
 from .models import StockLayer, InventoryAdjustment
 from .models import StockTransfer, UFVRate
 from .models import UFVRevaluationRun, UFVRevaluationRunLine
+from .models import (
+    StockEntryDocument,
+    StockEntryLine,
+    StockExitDocument,
+    StockExitLine,
+    StockExitLineAllocation,
+)
 from .serializers import StockTransferSerializer
 from .serializers import WarehouseSerializer
 from .serializers import ItemSerializer
@@ -20,9 +27,15 @@ from .serializers import StockExitSerializer
 from .serializers import InventoryAdjustmentSerializer
 from .serializers import UFVRateSerializer
 from .serializers import UFVRevaluationRunSerializer
+from .serializers import (
+    StockEntryDocumentSerializer,
+    StockExitDocumentSerializer,
+)
 from django.db import transaction, IntegrityError
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
+from django.utils import timezone
+from rest_framework.decorators import action
 
 from io import BytesIO
 from django.http import HttpResponse
@@ -337,7 +350,57 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
                 "notes": transfer.notes,
             })
 
-        movements = entries + exits + adjustments + transfers
+        entry_documents = []
+
+        for document in (
+            StockEntryDocument.objects
+            .prefetch_related("lines__warehouse", "lines__item")
+            .filter(status=StockEntryDocument.Status.CONFIRMED)
+        ):
+            for line in document.lines.all():
+                entry_documents.append({
+                    "type": "ENTRY_DOCUMENT",
+                    "date": document.entry_date,
+                    "warehouse_name": line.warehouse.name,
+                    "item_code": line.item.code,
+                    "item_name": line.item.name,
+                    "quantity": str(line.quantity),
+                    "unit_cost": str(line.unit_cost),
+                    "total_cost": str(line.total_cost.quantize(Decimal("0.01"))),
+                    "reference": document.document_number,
+                    "notes": document.reason,
+                })
+        
+        exit_documents = []
+
+        for document in (
+            StockExitDocument.objects
+            .prefetch_related("lines__warehouse", "lines__item")
+            .filter(status=StockExitDocument.Status.CONFIRMED)
+        ):
+            for line in document.lines.all():
+                exit_documents.append({
+                    "type": "EXIT_DOCUMENT",
+                    "date": document.exit_date,
+                    "warehouse_name": line.warehouse.name,
+                    "item_code": line.item.code,
+                    "item_name": line.item.name,
+                    "quantity": str(line.quantity),
+                    "unit_cost": None,
+                    "total_cost": str(line.total_cost.quantize(Decimal("0.01"))),
+                    "reference": document.document_number,
+                    "notes": document.reason,
+                })
+
+        # movements = entries + exits + adjustments + transfers
+        movements = (
+            entries
+            + exits
+            + adjustments
+            + transfers
+            + entry_documents
+            + exit_documents
+        )
         movements.sort(key=lambda row: row["date"], reverse=True)
 
         return Response(movements)
@@ -375,6 +438,33 @@ class KardexView(TenantRequiredMixin, APIView):
                 "total_cost": entry.quantity * entry.unit_cost,
                 "sort_id": entry.id,
             })
+        
+        entry_documents = (
+            StockEntryDocument.objects
+            .prefetch_related("lines__warehouse", "lines__item")
+            .filter(
+                status=StockEntryDocument.Status.CONFIRMED,
+                lines__warehouse_id=warehouse_id,
+                lines__item_id=item_id,
+            )
+            .distinct()
+        )
+
+        for document in entry_documents:
+            for line in document.lines.all():
+                if str(line.warehouse_id) != str(warehouse_id) or str(line.item_id) != str(item_id):
+                    continue
+
+                movements.append({
+                    "date": document.entry_date,
+                    "type": "ENTRY_DOCUMENT",
+                    "reference": document.document_number,
+                    "entry_quantity": line.quantity,
+                    "exit_quantity": Decimal("0"),
+                    "unit_cost": line.unit_cost,
+                    "total_cost": line.total_cost,
+                    "sort_id": line.id,
+                })
 
         exits = (
             StockExit.objects
@@ -408,6 +498,37 @@ class KardexView(TenantRequiredMixin, APIView):
                 "total_cost": total_cost,
                 "sort_id": stock_exit.id,
             })
+        
+        exit_documents = (
+            StockExitDocument.objects
+            .prefetch_related("lines__warehouse", "lines__item", "lines__allocations")
+            .filter(
+                status=StockExitDocument.Status.CONFIRMED,
+                lines__warehouse_id=warehouse_id,
+                lines__item_id=item_id,
+            )
+            .distinct()
+        )
+
+        for document in exit_documents:
+            for line in document.lines.all():
+                if str(line.warehouse_id) != str(warehouse_id) or str(line.item_id) != str(item_id):
+                    continue
+
+                movements.append({
+                    "date": document.exit_date,
+                    "type": "EXIT_DOCUMENT",
+                    "reference": document.document_number,
+                    "entry_quantity": Decimal("0"),
+                    "exit_quantity": line.quantity,
+                    "unit_cost": (
+                        line.total_cost / line.quantity
+                        if line.quantity > 0
+                        else Decimal("0")
+                    ),
+                    "total_cost": line.total_cost,
+                    "sort_id": line.id,
+                })
         
         adjustments = (
             InventoryAdjustment.objects
@@ -1362,3 +1483,322 @@ class UFVRevaluationRunPdfView(TenantRequiredMixin, APIView):
         )
 
         return http_response
+
+
+class StockEntryDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = StockEntryDocumentSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+        Membership.Role.MEMBER,
+    ]
+
+    def get_queryset(self):
+        return (
+            StockEntryDocument.objects
+            .prefetch_related("lines__warehouse", "lines__item")
+            .all()
+        )
+
+    @transaction.atomic
+    @action(detail=True, methods=["post"])
+    def confirm(self, request, pk=None):
+        document = self.get_object()
+
+        if document.status != StockEntryDocument.Status.DRAFT:
+            return Response(
+                {"detail": "Only draft documents can be confirmed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        lines = list(document.lines.select_related("warehouse", "item").all())
+
+        if not lines:
+            return Response(
+                {"detail": "Document must have at least one line."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        total_amount = Decimal("0")
+
+        for line in lines:
+            StockLayer.objects.create(
+                tenant=request.tenant,
+                stock_entry=None,
+                stock_entry_line=line,
+                warehouse=line.warehouse,
+                item=line.item,
+                original_quantity=line.quantity,
+                remaining_quantity=line.quantity,
+                unit_cost=line.unit_cost,
+                entry_date=document.entry_date,
+                ufv_value=line.ufv_value,
+            )
+
+            total_amount += line.total_cost
+
+        document.total_amount = total_amount
+        document.status = StockEntryDocument.Status.CONFIRMED
+        document.save(update_fields=["total_amount", "status"])
+
+        log_audit_event(
+            request=request,
+            action="confirm",
+            entity="StockEntryDocument",
+            entity_id=document.id,
+            status_code=200,
+            meta={
+                "document_number": document.document_number,
+                "total_amount": str(total_amount),
+            },
+        )
+
+        serializer = self.get_serializer(document)
+        return Response(serializer.data)
+    
+    @transaction.atomic
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        document = self.get_object()
+        reason = request.data.get("reason", "")
+
+        if document.status != StockEntryDocument.Status.CONFIRMED:
+            return Response(
+                {"detail": "Only confirmed documents can be cancelled."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        lines = document.lines.select_related("warehouse", "item").prefetch_related(
+            "stock_layer"
+        )
+
+        for line in lines:
+            layer = getattr(line, "stock_layer", None)
+
+            if not layer:
+                return Response(
+                    {"detail": f"Stock layer not found for line {line.id}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if layer.remaining_quantity != layer.original_quantity:
+                return Response(
+                    {
+                        "detail": (
+                            f"Cannot cancel entry document. "
+                            f"Stock for item {line.item.code} has already been consumed."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        for line in lines:
+            line.stock_layer.delete()
+
+        document.status = StockEntryDocument.Status.CANCELLED
+        document.cancelled_at = timezone.now()
+        document.cancellation_reason = reason
+        document.save(
+            update_fields=[
+                "status",
+                "cancelled_at",
+                "cancellation_reason",
+            ]
+        )
+
+        log_audit_event(
+            request=request,
+            action="cancel",
+            entity="StockEntryDocument",
+            entity_id=document.id,
+            status_code=200,
+            meta={
+                "document_number": document.document_number,
+                "reason": reason,
+            },
+        )
+
+        serializer = self.get_serializer(document)
+        return Response(serializer.data)
+
+
+class StockExitDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = StockExitDocumentSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+        Membership.Role.MEMBER,
+    ]
+
+    def get_queryset(self):
+        return (
+            StockExitDocument.objects
+            .prefetch_related(
+                "lines__warehouse",
+                "lines__item",
+                "lines__allocations",
+            )
+            .all()
+        )
+
+    @transaction.atomic
+    @action(detail=True, methods=["post"])
+    def confirm(self, request, pk=None):
+        document = self.get_object()
+
+        if document.status != StockExitDocument.Status.DRAFT:
+            return Response(
+                {"detail": "Only draft documents can be confirmed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        lines = list(document.lines.select_related("warehouse", "item").all())
+
+        if not lines:
+            return Response(
+                {"detail": "Document must have at least one line."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for line in lines:
+            available = (
+                StockLayer.objects
+                .filter(
+                    warehouse=line.warehouse,
+                    item=line.item,
+                    remaining_quantity__gt=0,
+                )
+                .aggregate(total=Sum("remaining_quantity"))
+                .get("total")
+                or Decimal("0")
+            )
+
+            if line.quantity > available:
+                return Response(
+                    {
+                        "detail": (
+                            f"Not enough stock for {line.item.code}. "
+                            f"Available: {available}"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        total_amount = Decimal("0")
+
+        for line in lines:
+            quantity_to_consume = line.quantity
+            line_total_cost = Decimal("0")
+
+            layers = (
+                StockLayer.objects
+                .select_for_update()
+                .filter(
+                    warehouse=line.warehouse,
+                    item=line.item,
+                    remaining_quantity__gt=0,
+                )
+                .order_by("entry_date", "id")
+            )
+
+            for layer in layers:
+                if quantity_to_consume <= 0:
+                    break
+
+                consumed_quantity = min(
+                    quantity_to_consume,
+                    layer.remaining_quantity,
+                )
+
+                StockExitLineAllocation.objects.create(
+                    tenant=request.tenant,
+                    stock_exit_line=line,
+                    stock_layer=layer,
+                    quantity=consumed_quantity,
+                    unit_cost=layer.unit_cost,
+                )
+
+                line_total_cost += consumed_quantity * layer.unit_cost
+
+                layer.remaining_quantity -= consumed_quantity
+                layer.save(update_fields=["remaining_quantity"])
+
+                quantity_to_consume -= consumed_quantity
+
+            line.total_cost = line_total_cost
+            line.save(update_fields=["total_cost"])
+
+            total_amount += line_total_cost
+
+        document.total_amount = total_amount
+        document.status = StockExitDocument.Status.CONFIRMED
+        document.save(update_fields=["total_amount", "status"])
+
+        log_audit_event(
+            request=request,
+            action="confirm",
+            entity="StockExitDocument",
+            entity_id=document.id,
+            status_code=200,
+            meta={
+                "document_number": document.document_number,
+                "total_amount": str(total_amount),
+            },
+        )
+
+        serializer = self.get_serializer(document)
+        return Response(serializer.data)
+    
+    @transaction.atomic
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        document = self.get_object()
+        reason = request.data.get("reason", "")
+
+        if document.status != StockExitDocument.Status.CONFIRMED:
+            return Response(
+                {"detail": "Only confirmed documents can be cancelled."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        lines = (
+            document.lines
+            .prefetch_related("allocations__stock_layer")
+            .all()
+        )
+
+        for line in lines:
+            for allocation in line.allocations.all():
+                layer = allocation.stock_layer
+                layer.remaining_quantity += allocation.quantity
+                layer.save(update_fields=["remaining_quantity"])
+
+        document.status = StockExitDocument.Status.CANCELLED
+        document.cancelled_at = timezone.now()
+        document.cancellation_reason = reason
+        document.save(
+            update_fields=[
+                "status",
+                "cancelled_at",
+                "cancellation_reason",
+            ]
+        )
+
+        log_audit_event(
+            request=request,
+            action="cancel",
+            entity="StockExitDocument",
+            entity_id=document.id,
+            status_code=200,
+            meta={
+                "document_number": document.document_number,
+                "reason": reason,
+            },
+        )
+
+        serializer = self.get_serializer(document)
+        return Response(serializer.data)

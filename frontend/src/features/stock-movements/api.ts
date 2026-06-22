@@ -7,7 +7,9 @@ export type StockMovement = {
     | "EXIT"
     | "ADJUSTMENT_POSITIVE"
     | "ADJUSTMENT_NEGATIVE"
-    | "TRANSFER";
+    | "TRANSFER"
+    | "ENTRY_DOCUMENT"
+    | "EXIT_DOCUMENT";
   date: string;
   warehouse_name: string;
   item_code: string;

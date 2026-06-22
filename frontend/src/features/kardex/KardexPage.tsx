@@ -163,7 +163,8 @@ export function KardexPage() {
                   const isPositive =
                     row.type === "ENTRY" ||
                     row.type === "ADJUSTMENT_POSITIVE" ||
-                    row.type === "TRANSFER_IN";
+                    row.type === "TRANSFER_IN" ||
+                    row.type === "ENTRY_DOCUMENT";
 
                   const isTransfer =
                     row.type === "TRANSFER_IN" ||
