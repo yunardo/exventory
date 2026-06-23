@@ -165,9 +165,6 @@ export function StockEntryDocumentsPage() {
     }
 
     createMutation.mutate(formData);
-
-    console.log(documentPdf);
-    console.log(documentPdf instanceof File);
   }
 
   function handleCancel(id: number) {

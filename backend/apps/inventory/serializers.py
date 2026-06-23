@@ -641,6 +641,21 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
             data["lines"] = json.loads(lines)
 
         return super().to_internal_value(data)
+    
+    def to_internal_value(self, data):
+        data = data.copy()
+
+        lines = data.get("lines")
+
+        if isinstance(lines, str):
+            try:
+                data["lines"] = json.loads(lines)
+            except json.JSONDecodeError:
+                raise serializers.ValidationError({
+                    "lines": "Invalid JSON format."
+                })
+
+        return super().to_internal_value(data)
 
 
 class StockExitLineSerializer(serializers.ModelSerializer):
@@ -758,5 +773,20 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
 
         if isinstance(lines, str):
             data["lines"] = json.loads(lines)
+
+        return super().to_internal_value(data)
+    
+    def to_internal_value(self, data):
+        data = data.copy()
+
+        lines = data.get("lines")
+
+        if isinstance(lines, str):
+            try:
+                data["lines"] = json.loads(lines)
+            except json.JSONDecodeError:
+                raise serializers.ValidationError({
+                    "lines": "Invalid JSON format."
+                })
 
         return super().to_internal_value(data)

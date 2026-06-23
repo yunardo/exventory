@@ -13,11 +13,7 @@ function getTenantBaseUrl() {
   return `https://${tenantSlug}.exventory.com`;
 }
 
-export const tenantApiClient = axios.create({
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+export const tenantApiClient = axios.create();
 
 tenantApiClient.interceptors.request.use((config) => {
   config.baseURL = getTenantBaseUrl();
