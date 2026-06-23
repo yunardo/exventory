@@ -10,6 +10,7 @@ import {
   confirmStockExitDocument,
   createStockExitDocument,
   getStockExitDocuments,
+  openStockExitDocumentPdf,
   type CreateStockExitDocumentPayload,
 } from "./api";
 
@@ -179,7 +180,7 @@ export function StockExitDocumentsPage() {
     formData.append("notes", values.notes ?? "");
     formData.append("lines", JSON.stringify(values.lines));
 
-    if (documentPdf) {
+    if (documentPdf instanceof File) {
       formData.append("document_pdf", documentPdf);
     }
 
@@ -464,14 +465,14 @@ export function StockExitDocumentsPage() {
                     </TableCell>
                     <TableCell>
                       {document.document_pdf ? (
-                        <a
-                          href={document.document_pdf}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-medium text-blue-600 hover:underline"
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!document.document_pdf}
+                          onClick={() => openStockExitDocumentPdf(document.id)}
                         >
                           View PDF
-                        </a>
+                        </Button>
                       ) : (
                         "-"
                       )}

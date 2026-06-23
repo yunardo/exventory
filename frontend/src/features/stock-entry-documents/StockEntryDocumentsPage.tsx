@@ -9,6 +9,7 @@ import {
   confirmStockEntryDocument,
   createStockEntryDocument,
   getStockEntryDocuments,
+  openStockEntryDocumentPdf,
   type CreateStockEntryDocumentPayload,
 } from "./api";
 
@@ -159,11 +160,14 @@ export function StockEntryDocumentsPage() {
     formData.append("notes", values.notes ?? "");
     formData.append("lines", JSON.stringify(values.lines));
 
-    if (documentPdf) {
+    if (documentPdf instanceof File) {
       formData.append("document_pdf", documentPdf);
     }
 
     createMutation.mutate(formData);
+
+    console.log(documentPdf);
+    console.log(documentPdf instanceof File);
   }
 
   function handleCancel(id: number) {
@@ -424,14 +428,14 @@ export function StockEntryDocumentsPage() {
                     </TableCell>
                     <TableCell>
                       {document.document_pdf ? (
-                        <a
-                          href={document.document_pdf}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-medium text-blue-600 hover:underline"
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!document.document_pdf}
+                          onClick={() => openStockEntryDocumentPdf(document.id)}
                         >
                           View PDF
-                        </a>
+                        </Button>
                       ) : (
                         "-"
                       )}

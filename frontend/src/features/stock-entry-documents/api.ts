@@ -95,3 +95,15 @@ export async function cancelStockEntryDocument(payload: {
 
   return response.data;
 }
+
+export async function openStockEntryDocumentPdf(id: number) {
+  const response = await tenantApiClient.get(
+    `/api/stock-entry-documents/${id}/download-pdf/`,
+    {
+      responseType: "blob",
+    }
+  );
+
+  const url = window.URL.createObjectURL(response.data);
+  window.open(url, "_blank");
+}

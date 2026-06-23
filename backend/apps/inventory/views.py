@@ -36,6 +36,7 @@ from django.db import transaction, IntegrityError
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
 from django.utils import timezone
+from django.http import FileResponse
 from rest_framework.decorators import action
 
 from io import BytesIO
@@ -1624,6 +1625,23 @@ class StockEntryDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSe
 
         serializer = self.get_serializer(document)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=["get"], url_path="download-pdf")
+    def download_pdf(self, request, pk=None):
+        document = self.get_object()
+
+        if not document.document_pdf:
+            return Response(
+                {"detail": "Document PDF not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return FileResponse(
+            document.document_pdf.open("rb"),
+            content_type="application/pdf",
+            as_attachment=False,
+            filename=document.document_pdf.name.split("/")[-1],
+        )
 
 
 class StockExitDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
@@ -1805,3 +1823,20 @@ class StockExitDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet
 
         serializer = self.get_serializer(document)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=["get"], url_path="download-pdf")
+    def download_pdf(self, request, pk=None):
+        document = self.get_object()
+
+        if not document.document_pdf:
+            return Response(
+                {"detail": "Document PDF not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return FileResponse(
+            document.document_pdf.open("rb"),
+            content_type="application/pdf",
+            as_attachment=False,
+            filename=document.document_pdf.name.split("/")[-1],
+        )
