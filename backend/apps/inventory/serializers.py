@@ -22,6 +22,7 @@ from .models import (
 )
 
 import json
+from django.http import QueryDict
 
 
 class WarehouseSerializer(serializers.ModelSerializer):
@@ -554,6 +555,31 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
             "cancelled_at",
             "cancellation_reason",
         ]
+    
+    def to_internal_value(self, data):
+        if isinstance(data, QueryDict):
+            mutable_data = data.copy()
+
+            lines = mutable_data.get("lines")
+
+            if isinstance(lines, str):
+                try:
+                    parsed_lines = json.loads(lines)
+                except json.JSONDecodeError:
+                    raise serializers.ValidationError({
+                        "lines": "Invalid JSON format."
+                    })
+
+                mutable_data._mutable = True
+                mutable_data.pop("lines", None)
+
+                for index, line in enumerate(parsed_lines):
+                    for key, value in line.items():
+                        mutable_data[f"lines[{index}].{key}"] = value
+
+            return super().to_internal_value(mutable_data)
+
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", [])
@@ -631,23 +657,6 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
 
         document.total_amount = total
         document.save(update_fields=["total_amount"])
-    
-    def to_internal_value(self, data):
-        mutable_data = data.copy()
-
-        lines = mutable_data.get("lines")
-
-        if isinstance(lines, str):
-            try:
-                parsed_lines = json.loads(lines)
-            except json.JSONDecodeError:
-                raise serializers.ValidationError({
-                    "lines": "Invalid JSON format."
-                })
-
-            mutable_data.setlist("lines", parsed_lines)
-
-        return super().to_internal_value(mutable_data)
 
 
 class StockExitLineSerializer(serializers.ModelSerializer):
@@ -703,6 +712,31 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
             "cancelled_at",
             "cancellation_reason",
         ]
+    
+    def to_internal_value(self, data):
+        if isinstance(data, QueryDict):
+            mutable_data = data.copy()
+
+            lines = mutable_data.get("lines")
+
+            if isinstance(lines, str):
+                try:
+                    parsed_lines = json.loads(lines)
+                except json.JSONDecodeError:
+                    raise serializers.ValidationError({
+                        "lines": "Invalid JSON format."
+                    })
+
+                mutable_data._mutable = True
+                mutable_data.pop("lines", None)
+
+                for index, line in enumerate(parsed_lines):
+                    for key, value in line.items():
+                        mutable_data[f"lines[{index}].{key}"] = value
+
+            return super().to_internal_value(mutable_data)
+
+        return super().to_internal_value(data)
 
     def validate(self, attrs):
         lines_data = attrs.get("lines", [])
@@ -757,20 +791,3 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
                 )
 
         return instance
-    
-    def to_internal_value(self, data):
-        mutable_data = data.copy()
-
-        lines = mutable_data.get("lines")
-
-        if isinstance(lines, str):
-            try:
-                parsed_lines = json.loads(lines)
-            except json.JSONDecodeError:
-                raise serializers.ValidationError({
-                    "lines": "Invalid JSON format."
-                })
-
-            mutable_data.setlist("lines", parsed_lines)
-
-        return super().to_internal_value(mutable_data)
