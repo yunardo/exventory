@@ -421,7 +421,7 @@ export function StockEntryDocumentsPage() {
                       {document.total_amount}
                     </TableCell>
                     <TableCell className="text-right">
-                      {document.lines.length}
+                      {document.lines_detail.length}
                     </TableCell>
                     <TableCell>
                       {document.document_pdf ? (

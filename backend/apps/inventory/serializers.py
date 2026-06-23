@@ -528,7 +528,12 @@ class StockEntryLineSerializer(serializers.ModelSerializer):
 
 
 class StockEntryDocumentSerializer(serializers.ModelSerializer):
-    lines = StockEntryLineSerializer(many=True)
+    lines = serializers.JSONField(write_only=True)
+    lines_detail = StockEntryLineSerializer(
+        source="lines",
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
         model = StockEntryDocument
@@ -547,6 +552,7 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
             "cancelled_at",
             "cancellation_reason",
             "lines",
+            "lines_detail",
         ]
         read_only_fields = [
             "id",
@@ -583,20 +589,14 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", [])
-
-        if isinstance(lines_data, str):
-            lines_data = json.loads(lines_data)
-
         tenant = validated_data.get("tenant") or self.context["request"].tenant
 
         document = StockEntryDocument.objects.create(**validated_data)
 
         for line_data in lines_data:
-            entry_date = document.entry_date
-
             ufv_rate = (
                 UFVRate.objects
-                .filter(tenant=tenant, date=entry_date)
+                .filter(tenant=tenant, date=document.entry_date)
                 .first()
             )
 
@@ -628,17 +628,15 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
         if lines_data is not None:
             instance.lines.all().delete()
 
-            tenant = instance.tenant
-
             for line_data in lines_data:
                 ufv_rate = (
                     UFVRate.objects
-                    .filter(tenant=tenant, date=instance.entry_date)
+                    .filter(tenant=instance.tenant, date=instance.entry_date)
                     .first()
                 )
 
                 StockEntryLine.objects.create(
-                    tenant=tenant,
+                    tenant=instance.tenant,
                     document=instance,
                     ufv_rate=ufv_rate,
                     ufv_value=ufv_rate.value if ufv_rate else None,
@@ -684,7 +682,12 @@ class StockExitLineSerializer(serializers.ModelSerializer):
 
 
 class StockExitDocumentSerializer(serializers.ModelSerializer):
-    lines = StockExitLineSerializer(many=True)
+    lines = serializers.JSONField(write_only=True)
+    lines_detail = StockExitLineSerializer(
+        source="lines",
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
         model = StockExitDocument
@@ -704,6 +707,7 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
             "cancelled_at",
             "cancellation_reason",
             "lines",
+            "lines_detail",
         ]
         read_only_fields = [
             "id",
@@ -750,10 +754,6 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", [])
-
-        if isinstance(lines_data, str):
-            lines_data = json.loads(lines_data)
-
         tenant = validated_data.get("tenant") or self.context["request"].tenant
 
         document = StockExitDocument.objects.create(**validated_data)

@@ -34,6 +34,7 @@ export type StockExitDocument = {
   cancelled_at: string | null;
   cancellation_reason: string;
   lines: StockExitDocumentLine[];
+  lines_detail: StockExitDocumentLine[];
 };
 
 export type CreateStockExitDocumentPayload = {
