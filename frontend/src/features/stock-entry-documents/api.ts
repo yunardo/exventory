@@ -64,7 +64,7 @@ export async function getStockEntryDocuments() {
 }
 
 export async function createStockEntryDocument(
-  payload: CreateStockEntryDocumentPayload
+  payload: CreateStockEntryDocumentPayload | FormData
 ) {
   const response = await tenantApiClient.post<StockEntryDocument>(
     "/api/stock-entry-documents/",

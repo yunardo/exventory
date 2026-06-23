@@ -21,6 +21,7 @@ from .models import (
     StockExitLineAllocation,
 )
 
+import json
 
 
 class WarehouseSerializer(serializers.ModelSerializer):
@@ -556,6 +557,10 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", [])
+
+        if isinstance(lines_data, str):
+            lines_data = json.loads(lines_data)
+
         tenant = validated_data.get("tenant") or self.context["request"].tenant
 
         document = StockEntryDocument.objects.create(**validated_data)
@@ -626,6 +631,16 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
 
         document.total_amount = total
         document.save(update_fields=["total_amount"])
+    
+    def to_internal_value(self, data):
+        data = data.copy()
+
+        lines = data.get("lines")
+
+        if isinstance(lines, str):
+            data["lines"] = json.loads(lines)
+
+        return super().to_internal_value(data)
 
 
 class StockExitLineSerializer(serializers.ModelSerializer):
@@ -694,6 +709,10 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", [])
+
+        if isinstance(lines_data, str):
+            lines_data = json.loads(lines_data)
+
         tenant = validated_data.get("tenant") or self.context["request"].tenant
 
         document = StockExitDocument.objects.create(**validated_data)
@@ -731,3 +750,13 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
                 )
 
         return instance
+    
+    def to_internal_value(self, data):
+        data = data.copy()
+
+        lines = data.get("lines")
+
+        if isinstance(lines, str):
+            data["lines"] = json.loads(lines)
+
+        return super().to_internal_value(data)

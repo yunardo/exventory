@@ -3,6 +3,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from apps.core.api import TenantRequiredMixin
 from apps.tenancy.models import Membership
 from apps.tenancy.permissions import IsTenantMember, HasTenantRole
@@ -1486,6 +1487,7 @@ class UFVRevaluationRunPdfView(TenantRequiredMixin, APIView):
 
 
 class StockEntryDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     serializer_class = StockEntryDocumentSerializer
     permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
 
@@ -1625,6 +1627,7 @@ class StockEntryDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSe
 
 
 class StockExitDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     serializer_class = StockExitDocumentSerializer
     permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
 

@@ -28,10 +28,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useState } from "react";
 
 export function StockEntryDocumentsPage() {
   const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
+  const [documentPdf, setDocumentPdf] = useState<File | null>(null);
 
   const {
     register,
@@ -105,6 +107,7 @@ export function StockEntryDocumentsPage() {
           },
         ],
       });
+      setDocumentPdf(null);
     },
   });
 
@@ -145,7 +148,22 @@ export function StockEntryDocumentsPage() {
   });
 
   function onSubmit(values: CreateStockEntryDocumentPayload) {
-    createMutation.mutate(values);
+    const formData = new FormData();
+
+    formData.append("document_type", values.document_type);
+    formData.append("document_number", values.document_number);
+    formData.append("supplier_name", values.supplier_name);
+    formData.append("supplier_tax_id", values.supplier_tax_id ?? "");
+    formData.append("entry_date", values.entry_date);
+    formData.append("reason", values.reason ?? "");
+    formData.append("notes", values.notes ?? "");
+    formData.append("lines", JSON.stringify(values.lines));
+
+    if (documentPdf) {
+      formData.append("document_pdf", documentPdf);
+    }
+
+    createMutation.mutate(formData);
   }
 
   function handleCancel(id: number) {
@@ -236,6 +254,18 @@ export function StockEntryDocumentsPage() {
 
               <div className="md:col-span-3">
                 <Input placeholder="Notes" {...register("notes")} />
+              </div>
+
+              <div className="md:col-span-3">
+                <label className="text-sm font-medium">Document PDF</label>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(event) => {
+                    setDocumentPdf(event.target.files?.[0] ?? null);
+                  }}
+                  className="mt-2 block w-full text-sm"
+                />
               </div>
             </div>
 
@@ -367,6 +397,7 @@ export function StockEntryDocumentsPage() {
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Lines</TableHead>
+                  <TableHead>PDF</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -390,6 +421,20 @@ export function StockEntryDocumentsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {document.lines.length}
+                    </TableCell>
+                    <TableCell>
+                      {document.document_pdf ? (
+                        <a
+                          href={document.document_pdf}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-medium text-blue-600 hover:underline"
+                        >
+                          View PDF
+                        </a>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

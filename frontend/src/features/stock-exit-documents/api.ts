@@ -62,7 +62,7 @@ export async function getStockExitDocuments() {
 }
 
 export async function createStockExitDocument(
-  payload: CreateStockExitDocumentPayload
+  payload: CreateStockExitDocumentPayload | FormData
 ) {
   const response = await tenantApiClient.post<StockExitDocument>(
     "/api/stock-exit-documents/",
