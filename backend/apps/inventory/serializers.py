@@ -633,29 +633,21 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
         document.save(update_fields=["total_amount"])
     
     def to_internal_value(self, data):
-        data = data.copy()
+        mutable_data = data.copy()
 
-        lines = data.get("lines")
-
-        if isinstance(lines, str):
-            data["lines"] = json.loads(lines)
-
-        return super().to_internal_value(data)
-    
-    def to_internal_value(self, data):
-        data = data.copy()
-
-        lines = data.get("lines")
+        lines = mutable_data.get("lines")
 
         if isinstance(lines, str):
             try:
-                data["lines"] = json.loads(lines)
+                parsed_lines = json.loads(lines)
             except json.JSONDecodeError:
                 raise serializers.ValidationError({
                     "lines": "Invalid JSON format."
                 })
 
-        return super().to_internal_value(data)
+            mutable_data.setlist("lines", parsed_lines)
+
+        return super().to_internal_value(mutable_data)
 
 
 class StockExitLineSerializer(serializers.ModelSerializer):
@@ -767,26 +759,18 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
         return instance
     
     def to_internal_value(self, data):
-        data = data.copy()
+        mutable_data = data.copy()
 
-        lines = data.get("lines")
-
-        if isinstance(lines, str):
-            data["lines"] = json.loads(lines)
-
-        return super().to_internal_value(data)
-    
-    def to_internal_value(self, data):
-        data = data.copy()
-
-        lines = data.get("lines")
+        lines = mutable_data.get("lines")
 
         if isinstance(lines, str):
             try:
-                data["lines"] = json.loads(lines)
+                parsed_lines = json.loads(lines)
             except json.JSONDecodeError:
                 raise serializers.ValidationError({
                     "lines": "Invalid JSON format."
                 })
 
-        return super().to_internal_value(data)
+            mutable_data.setlist("lines", parsed_lines)
+
+        return super().to_internal_value(mutable_data)
