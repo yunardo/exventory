@@ -10,3 +10,4 @@ openpyxl
 Pillow
 django-storages[boto3]
 reportlab
+qrcode[pil]

@@ -2,6 +2,8 @@ from io import BytesIO
 from decimal import Decimal
 
 from reportlab.lib import colors
+from reportlab.pdfgen import canvas
+from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -16,9 +18,42 @@ from reportlab.platypus import (
 )
 from apps.core.pdf import build_logo_image
 
+import qrcode
+
+
+def make_document_watermark(status_label):
+    def watermark(canvas, doc):
+        canvas.saveState()
+
+        canvas.setFont("Helvetica-Bold", 70)
+        canvas.setFillColor(Color(0.7, 0.7, 0.7, alpha=0.18))
+
+        canvas.translate(doc.pagesize[0] / 2, doc.pagesize[1] / 2)
+        canvas.rotate(35)
+
+        canvas.drawCentredString(0, 0, status_label.upper())
+
+        canvas.restoreState()
+
+    return watermark
+
+
+def build_qr_image(value, width=2.2 * cm, height=2.2 * cm):
+    qr = qrcode.make(value)
+
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return Image(buffer, width=width, height=height)
+
 
 def build_stock_entry_document_pdf(document):
     buffer = BytesIO()
+
+    qr = build_qr_image(
+        f"ENTRY_DOCUMENT:{document.tenant.slug}:{document.id}"
+    )
 
     pdf = SimpleDocTemplate(
         buffer,
@@ -52,8 +87,8 @@ def build_stock_entry_document_pdf(document):
     ]
 
     header = Table(
-        header_data,
-        colWidths=[3 * cm, 13 * cm],
+        [[logo if logo else "", title, qr]],
+        colWidths=[3 * cm, 10 * cm, 3 * cm],
     )
 
     elements.append(header)
@@ -204,7 +239,13 @@ def build_stock_entry_document_pdf(document):
 
     elements.append(signature)
 
-    pdf.build(elements)
+    watermark = make_document_watermark(document.get_status_display())
+
+    pdf.build(
+        elements,
+        onFirstPage=watermark,
+        onLaterPages=watermark,
+    )
 
     buffer.seek(0)
     return buffer
@@ -212,6 +253,10 @@ def build_stock_entry_document_pdf(document):
 
 def build_stock_exit_document_pdf(document):
     buffer = BytesIO()
+
+    qr = build_qr_image(
+        f"EXIT_DOCUMENT:{document.tenant.slug}:{document.id}"
+    )
 
     pdf = SimpleDocTemplate(
         buffer,
@@ -236,7 +281,10 @@ def build_stock_exit_document_pdf(document):
         styles["Title"],
     )
 
-    header = Table([[logo if logo else "", title]], colWidths=[3 * cm, 13 * cm])
+    header = Table(
+        [[logo if logo else "", title, qr]],
+        colWidths=[3 * cm, 10 * cm, 3 * cm],
+    )
     elements.append(header)
     elements.append(Spacer(1, 0.5 * cm))
 
@@ -320,7 +368,13 @@ def build_stock_exit_document_pdf(document):
 
     elements.append(signature)
 
-    pdf.build(elements)
+    watermark = make_document_watermark(document.get_status_display())
+
+    pdf.build(
+        elements,
+        onFirstPage=watermark,
+        onLaterPages=watermark,
+    )
 
     buffer.seek(0)
     return buffer
