@@ -50,6 +50,8 @@ from apps.core.pdf import build_current_stock_pdf
 from apps.core.pdf import build_kardex_pdf
 from apps.core.pdf import build_ufv_revaluation_run_pdf
 
+from .document_pdfs import build_stock_entry_document_pdf
+
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
     serializer_class = WarehouseSerializer
@@ -1641,6 +1643,21 @@ class StockEntryDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSe
             content_type="application/pdf",
             as_attachment=False,
             filename=document.document_pdf.name.split("/")[-1],
+        )
+    
+    @action(detail=True, methods=["get"])
+    def pdf(self, request, pk=None):
+        document = self.get_object()
+
+        pdf = build_stock_entry_document_pdf(document)
+
+        return FileResponse(
+            pdf,
+            content_type="application/pdf",
+            filename=(
+                f"stock-entry-"
+                f"{document.document_number}.pdf"
+            ),
         )
 
 

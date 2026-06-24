@@ -31,10 +31,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function StockExitDocumentsPage() {
   const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [documentPdf, setDocumentPdf] = useState<File | null>(null);
 
   const {
@@ -479,6 +481,13 @@ export function StockExitDocumentsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/stock-exit-documents/${document.id}`)}
+                        >
+                          View
+                        </Button>
                         {document.status === "draft" && (
                           <Button
                             size="sm"

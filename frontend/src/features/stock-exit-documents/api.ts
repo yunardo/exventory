@@ -105,3 +105,11 @@ export async function openStockExitDocumentPdf(id: number) {
   const url = window.URL.createObjectURL(response.data);
   window.open(url, "_blank");
 }
+
+export async function getStockExitDocument(id: number) {
+  const response = await tenantApiClient.get<StockExitDocument>(
+    `/api/stock-exit-documents/${id}/`
+  );
+
+  return response.data;
+}

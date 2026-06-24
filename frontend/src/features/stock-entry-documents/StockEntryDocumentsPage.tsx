@@ -9,6 +9,7 @@ import {
   confirmStockEntryDocument,
   createStockEntryDocument,
   getStockEntryDocuments,
+  openGeneratedStockEntryPdf,
   openStockEntryDocumentPdf,
   type CreateStockEntryDocumentPayload,
 } from "./api";
@@ -30,11 +31,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function StockEntryDocumentsPage() {
   const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
   const [documentPdf, setDocumentPdf] = useState<File | null>(null);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -439,6 +442,22 @@ export function StockEntryDocumentsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/stock-entry-documents/${document.id}`)}
+                        >
+                          View
+                        </Button>
+
+                        <Button
+                          onClick={() =>
+                            openGeneratedStockEntryPdf(document.id)
+                          }
+                        >
+                          Generate PDF
+                        </Button>
+                        
                         {document.status === "draft" && (
                           <Button
                             size="sm"

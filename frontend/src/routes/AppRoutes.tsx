@@ -28,6 +28,8 @@ import { UFVRevaluationRunsPage } from "@/features/ufv-revaluation/UFVRevaluatio
 import { UFVRevaluationRunDetailPage } from "@/features/ufv-revaluation/UFVRevaluationRunDetailPage";
 import { StockEntryDocumentsPage } from "@/features/stock-entry-documents/StockEntryDocumentsPage";
 import { StockExitDocumentsPage } from "@/features/stock-exit-documents/StockExitDocumentsPage";
+import { StockEntryDocumentDetailPage } from "@/features/stock-entry-documents/StockEntryDocumentDetailPage";
+import { StockExitDocumentDetailPage } from "@/features/stock-exit-documents/StockExitDocumentDetailPage";
 
 export function AppRoutes() {
   return (
@@ -47,8 +49,16 @@ export function AppRoutes() {
               <Route path="/items" element={<ItemsPage />} />
               <Route path="/stock-entries" element={<StockEntriesPage />} />
               <Route path="/stock-entry-documents" element={<StockEntryDocumentsPage />} />
+              <Route
+                path="/stock-entry-documents/:id"
+                element={<StockEntryDocumentDetailPage />}
+              />
               <Route path="/stock-exits" element={<StockExitsPage />} />
               <Route path="/stock-exit-documents" element={<StockExitDocumentsPage />} />
+              <Route
+                path="/stock-exit-documents/:id"
+                element={<StockExitDocumentDetailPage />}
+              />
               <Route path="/stock-transfers" element={<StockTransfersPage />} />
               <Route path="/current-stock" element={<CurrentStockPage />} />
               <Route path="/stock-movements" element={<StockMovementsPage />} />

@@ -107,3 +107,23 @@ export async function openStockEntryDocumentPdf(id: number) {
   const url = window.URL.createObjectURL(response.data);
   window.open(url, "_blank");
 }
+
+export async function getStockEntryDocument(id: number) {
+  const response = await tenantApiClient.get<StockEntryDocument>(
+    `/api/stock-entry-documents/${id}/`
+  );
+
+  return response.data;
+}
+
+export async function openGeneratedStockEntryPdf(id: number) {
+  const response = await tenantApiClient.get(
+    `/api/stock-entry-documents/${id}/pdf/`,
+    {
+      responseType: "blob",
+    }
+  );
+
+  const url = URL.createObjectURL(response.data);
+  window.open(url, "_blank");
+}
