@@ -343,3 +343,18 @@ def build_ufv_revaluation_run_pdf(tenant, run, user=None):
     elements.append(table)
 
     return build_pdf_buffer(elements)
+
+
+def build_logo_image(company_logo, width=140, height=55):
+    if not company_logo:
+        return None
+
+    try:
+        with company_logo.open("rb") as logo_file:
+            logo_buffer = BytesIO(logo_file.read())
+            logo_buffer.seek(0)
+
+            return Image(logo_buffer, width=width, height=height)
+
+    except Exception:
+        return None

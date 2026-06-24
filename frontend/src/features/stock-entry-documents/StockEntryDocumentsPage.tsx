@@ -9,7 +9,6 @@ import {
   confirmStockEntryDocument,
   createStockEntryDocument,
   getStockEntryDocuments,
-  openGeneratedStockEntryPdf,
   openStockEntryDocumentPdf,
   type CreateStockEntryDocumentPayload,
 } from "./api";
@@ -449,15 +448,6 @@ export function StockEntryDocumentsPage() {
                         >
                           View
                         </Button>
-
-                        <Button
-                          onClick={() =>
-                            openGeneratedStockEntryPdf(document.id)
-                          }
-                        >
-                          Generate PDF
-                        </Button>
-                        
                         {document.status === "draft" && (
                           <Button
                             size="sm"

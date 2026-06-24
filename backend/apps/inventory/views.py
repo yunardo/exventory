@@ -50,7 +50,7 @@ from apps.core.pdf import build_current_stock_pdf
 from apps.core.pdf import build_kardex_pdf
 from apps.core.pdf import build_ufv_revaluation_run_pdf
 
-from .document_pdfs import build_stock_entry_document_pdf
+from apps.inventory.document_pdfs import build_stock_entry_document_pdf
 
 
 class WarehouseViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):

@@ -46,7 +46,7 @@ def build_stock_entry_document_pdf(document):
 
     header_data = [
         [
-            logo,
+            logo if logo else "",
             title,
         ]
     ]

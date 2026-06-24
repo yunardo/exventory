@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import {
   getStockEntryDocument,
+  openGeneratedStockEntryPdf,
   openStockEntryDocumentPdf,
 } from "./api";
 import { useTenant } from "../../context/TenantContext";
@@ -151,6 +152,13 @@ export function StockEntryDocumentDetailPage() {
                 onClick={() => openStockEntryDocumentPdf(document.id)}
               >
                 View PDF
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => openGeneratedStockEntryPdf(document.id)}
+              >
+                Generate PDF
               </Button>
             </CardContent>
           </Card>
