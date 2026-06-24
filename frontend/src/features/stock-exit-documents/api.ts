@@ -113,3 +113,13 @@ export async function getStockExitDocument(id: number) {
 
   return response.data;
 }
+
+export async function openGeneratedStockExitPdf(id: number) {
+  const response = await tenantApiClient.get(
+    `/api/stock-exit-documents/${id}/pdf/`,
+    { responseType: "blob" }
+  );
+
+  const url = URL.createObjectURL(response.data);
+  window.open(url, "_blank");
+}
