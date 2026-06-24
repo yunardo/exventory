@@ -563,17 +563,28 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
         ]
     
     def to_internal_value(self, data):
-        data = data.copy()
+        mutable_data = data.copy()
 
-        raw_lines = data.get("lines")
+        raw_lines = mutable_data.get("lines")
 
         if raw_lines is not None and isinstance(raw_lines, str):
             try:
-                data["lines"] = json.loads(raw_lines)
+                parsed_lines = json.loads(raw_lines)
             except json.JSONDecodeError:
                 raise serializers.ValidationError({
                     "lines": "Invalid JSON format."
                 })
+
+            mutable_data = {
+                key: mutable_data.get(key)
+                for key in mutable_data.keys()
+            }
+            mutable_data["lines"] = parsed_lines
+
+            if "document_pdf" in data:
+                mutable_data["document_pdf"] = data.get("document_pdf")
+
+            return super().to_internal_value(mutable_data)
 
         return super().to_internal_value(data)
 
@@ -708,17 +719,28 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
         ]
     
     def to_internal_value(self, data):
-        data = data.copy()
+        mutable_data = data.copy()
 
-        raw_lines = data.get("lines")
+        raw_lines = mutable_data.get("lines")
 
         if raw_lines is not None and isinstance(raw_lines, str):
             try:
-                data["lines"] = json.loads(raw_lines)
+                parsed_lines = json.loads(raw_lines)
             except json.JSONDecodeError:
                 raise serializers.ValidationError({
                     "lines": "Invalid JSON format."
                 })
+
+            mutable_data = {
+                key: mutable_data.get(key)
+                for key in mutable_data.keys()
+            }
+            mutable_data["lines"] = parsed_lines
+
+            if "document_pdf" in data:
+                mutable_data["document_pdf"] = data.get("document_pdf")
+
+            return super().to_internal_value(mutable_data)
 
         return super().to_internal_value(data)
 
