@@ -604,9 +604,13 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
             StockEntryLine.objects.create(
                 tenant=tenant,
                 document=document,
+                warehouse_id=line_data["warehouse"],
+                item_id=line_data["item"],
+                quantity=line_data["quantity"],
+                unit_cost=line_data["unit_cost"],
+                notes=line_data.get("notes", ""),
                 ufv_rate=ufv_rate,
                 ufv_value=ufv_rate.value if ufv_rate else None,
-                **line_data,
             )
 
         self._recalculate_total(document)
@@ -639,9 +643,13 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
                 StockEntryLine.objects.create(
                     tenant=instance.tenant,
                     document=instance,
+                    warehouse_id=line_data["warehouse"],
+                    item_id=line_data["item"],
+                    quantity=line_data["quantity"],
+                    unit_cost=line_data["unit_cost"],
+                    notes=line_data.get("notes", ""),
                     ufv_rate=ufv_rate,
                     ufv_value=ufv_rate.value if ufv_rate else None,
-                    **line_data,
                 )
 
         self._recalculate_total(instance)
@@ -764,7 +772,10 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
             StockExitLine.objects.create(
                 tenant=tenant,
                 document=document,
-                **line_data,
+                warehouse_id=line_data["warehouse"],
+                item_id=line_data["item"],
+                quantity=line_data["quantity"],
+                notes=line_data.get("notes", ""),
             )
 
         return document
@@ -789,7 +800,10 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
                 StockExitLine.objects.create(
                     tenant=instance.tenant,
                     document=instance,
-                    **line_data,
+                    warehouse_id=line_data["warehouse"],
+                    item_id=line_data["item"],
+                    quantity=line_data["quantity"],
+                    notes=line_data.get("notes", ""),
                 )
 
         return instance
