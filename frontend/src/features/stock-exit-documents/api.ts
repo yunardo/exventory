@@ -33,7 +33,6 @@ export type StockExitDocument = {
   document_pdf: string | null;
   cancelled_at: string | null;
   cancellation_reason: string;
-  lines: StockExitDocumentLine[];
   lines_detail: StockExitDocumentLine[];
 };
 

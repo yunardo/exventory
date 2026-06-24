@@ -528,7 +528,7 @@ class StockEntryLineSerializer(serializers.ModelSerializer):
 
 
 class StockEntryDocumentSerializer(serializers.ModelSerializer):
-    lines = serializers.JSONField(write_only=True)
+    lines = serializers.JSONField(write_only=True, required=True)
     lines_detail = StockEntryLineSerializer(
         source="lines",
         many=True,
@@ -563,27 +563,17 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
         ]
     
     def to_internal_value(self, data):
-        if isinstance(data, QueryDict):
-            mutable_data = data.copy()
+        data = data.copy()
 
-            lines = mutable_data.get("lines")
+        raw_lines = data.get("lines")
 
-            if isinstance(lines, str):
-                try:
-                    parsed_lines = json.loads(lines)
-                except json.JSONDecodeError:
-                    raise serializers.ValidationError({
-                        "lines": "Invalid JSON format."
-                    })
-
-                mutable_data._mutable = True
-                mutable_data.pop("lines", None)
-
-                for index, line in enumerate(parsed_lines):
-                    for key, value in line.items():
-                        mutable_data[f"lines[{index}].{key}"] = value
-
-            return super().to_internal_value(mutable_data)
+        if raw_lines is not None and isinstance(raw_lines, str):
+            try:
+                data["lines"] = json.loads(raw_lines)
+            except json.JSONDecodeError:
+                raise serializers.ValidationError({
+                    "lines": "Invalid JSON format."
+                })
 
         return super().to_internal_value(data)
 
@@ -682,7 +672,7 @@ class StockExitLineSerializer(serializers.ModelSerializer):
 
 
 class StockExitDocumentSerializer(serializers.ModelSerializer):
-    lines = serializers.JSONField(write_only=True)
+    lines = serializers.JSONField(write_only=True, required=True)
     lines_detail = StockExitLineSerializer(
         source="lines",
         many=True,
@@ -718,27 +708,17 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
         ]
     
     def to_internal_value(self, data):
-        if isinstance(data, QueryDict):
-            mutable_data = data.copy()
+        data = data.copy()
 
-            lines = mutable_data.get("lines")
+        raw_lines = data.get("lines")
 
-            if isinstance(lines, str):
-                try:
-                    parsed_lines = json.loads(lines)
-                except json.JSONDecodeError:
-                    raise serializers.ValidationError({
-                        "lines": "Invalid JSON format."
-                    })
-
-                mutable_data._mutable = True
-                mutable_data.pop("lines", None)
-
-                for index, line in enumerate(parsed_lines):
-                    for key, value in line.items():
-                        mutable_data[f"lines[{index}].{key}"] = value
-
-            return super().to_internal_value(mutable_data)
+        if raw_lines is not None and isinstance(raw_lines, str):
+            try:
+                data["lines"] = json.loads(raw_lines)
+            except json.JSONDecodeError:
+                raise serializers.ValidationError({
+                    "lines": "Invalid JSON format."
+                })
 
         return super().to_internal_value(data)
 
