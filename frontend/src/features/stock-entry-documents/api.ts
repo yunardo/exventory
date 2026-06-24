@@ -40,7 +40,6 @@ export type StockEntryDocument = {
 
 export type CreateStockEntryDocumentPayload = {
   document_type: string;
-  document_number: string;
   supplier_name: string;
   supplier_tax_id?: string;
   entry_date: string;

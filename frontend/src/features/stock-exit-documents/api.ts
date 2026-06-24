@@ -38,7 +38,6 @@ export type StockExitDocument = {
 
 export type CreateStockExitDocumentPayload = {
   document_type: string;
-  document_number: string;
   requester_name: string;
   requesting_unit: string;
   responsible_name?: string;

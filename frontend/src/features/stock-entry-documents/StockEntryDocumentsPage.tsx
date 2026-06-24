@@ -47,7 +47,6 @@ export function StockEntryDocumentsPage() {
   } = useForm<CreateStockEntryDocumentPayload>({
     defaultValues: {
       document_type: "invoice",
-      document_number: "",
       supplier_name: "",
       supplier_tax_id: "",
       entry_date: new Date().toISOString().slice(0, 10),
@@ -94,7 +93,6 @@ export function StockEntryDocumentsPage() {
 
       reset({
         document_type: "invoice",
-        document_number: "",
         supplier_name: "",
         supplier_tax_id: "",
         entry_date: new Date().toISOString().slice(0, 10),
@@ -154,7 +152,6 @@ export function StockEntryDocumentsPage() {
     const formData = new FormData();
 
     formData.append("document_type", values.document_type);
-    formData.append("document_number", values.document_number);
     formData.append("supplier_name", values.supplier_name);
     formData.append("supplier_tax_id", values.supplier_tax_id ?? "");
     formData.append("entry_date", values.entry_date);
@@ -211,20 +208,6 @@ export function StockEntryDocumentsPage() {
                 {errors.document_type && (
                   <p className="mt-1 text-sm text-red-600">
                     {errors.document_type.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Input
-                  placeholder="Document number"
-                  {...register("document_number", {
-                    required: "Document number is required",
-                  })}
-                />
-                {errors.document_number && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.document_number.message}
                   </p>
                 )}
               </div>

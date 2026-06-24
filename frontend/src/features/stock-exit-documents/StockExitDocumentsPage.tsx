@@ -49,7 +49,6 @@ export function StockExitDocumentsPage() {
   } = useForm<CreateStockExitDocumentPayload>({
     defaultValues: {
       document_type: "request",
-      document_number: "",
       requester_name: "",
       requesting_unit: "",
       responsible_name: "",
@@ -103,7 +102,6 @@ export function StockExitDocumentsPage() {
 
       reset({
         document_type: "request",
-        document_number: "",
         requester_name: "",
         requesting_unit: "",
         responsible_name: "",
@@ -173,7 +171,6 @@ export function StockExitDocumentsPage() {
     const formData = new FormData();
 
     formData.append("document_type", values.document_type);
-    formData.append("document_number", values.document_number);
     formData.append("requester_name", values.requester_name);
     formData.append("requesting_unit", values.requesting_unit);
     formData.append("responsible_name", values.responsible_name ?? "");
@@ -231,20 +228,6 @@ export function StockExitDocumentsPage() {
                 {errors.document_type && (
                   <p className="mt-1 text-sm text-red-600">
                     {errors.document_type.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Input
-                  placeholder="Document number"
-                  {...register("document_number", {
-                    required: "Document number is required",
-                  })}
-                />
-                {errors.document_number && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.document_number.message}
                   </p>
                 )}
               </div>

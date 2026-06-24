@@ -4,6 +4,7 @@ from .models import Item
 from .models import StockEntry
 from .models import StockExit
 from decimal import Decimal
+from .services import generate_document_number
 from django.db.models import Sum
 from django.db import transaction
 
@@ -556,6 +557,7 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "document_number",
             "status",
             "total_amount",
             "cancelled_at",
@@ -591,6 +593,12 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", [])
         tenant = validated_data.get("tenant") or self.context["request"].tenant
+
+        validated_data["document_number"] = generate_document_number(
+            tenant=tenant,
+            code="ING",
+            date=validated_data["entry_date"],
+        )
 
         document = StockEntryDocument.objects.create(**validated_data)
 
@@ -720,6 +728,7 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "document_number",
             "status",
             "total_amount",
             "cancelled_at",
@@ -765,6 +774,12 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", [])
         tenant = validated_data.get("tenant") or self.context["request"].tenant
+
+        validated_data["document_number"] = generate_document_number(
+            tenant=tenant,
+            code="SAL",
+            date=validated_data["exit_date"],
+        )
 
         document = StockExitDocument.objects.create(**validated_data)
 
