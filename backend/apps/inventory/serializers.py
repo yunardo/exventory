@@ -606,8 +606,8 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
                 document=document,
                 warehouse_id=line_data["warehouse"],
                 item_id=line_data["item"],
-                quantity=line_data["quantity"],
-                unit_cost=line_data["unit_cost"],
+                quantity=Decimal(str(line_data["quantity"])),
+                unit_cost=Decimal(str(line_data["unit_cost"])),
                 notes=line_data.get("notes", ""),
                 ufv_rate=ufv_rate,
                 ufv_value=ufv_rate.value if ufv_rate else None,
@@ -645,8 +645,8 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
                     document=instance,
                     warehouse_id=line_data["warehouse"],
                     item_id=line_data["item"],
-                    quantity=line_data["quantity"],
-                    unit_cost=line_data["unit_cost"],
+                    quantity=Decimal(str(line_data["quantity"])),
+                    unit_cost=Decimal(str(line_data["unit_cost"])),
                     notes=line_data.get("notes", ""),
                     ufv_rate=ufv_rate,
                     ufv_value=ufv_rate.value if ufv_rate else None,
@@ -774,7 +774,7 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
                 document=document,
                 warehouse_id=line_data["warehouse"],
                 item_id=line_data["item"],
-                quantity=line_data["quantity"],
+                quantity=Decimal(str(line_data["quantity"])),
                 notes=line_data.get("notes", ""),
             )
 
@@ -802,7 +802,7 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
                     document=instance,
                     warehouse_id=line_data["warehouse"],
                     item_id=line_data["item"],
-                    quantity=line_data["quantity"],
+                    quantity=Decimal(str(line_data["quantity"])),
                     notes=line_data.get("notes", ""),
                 )
 
