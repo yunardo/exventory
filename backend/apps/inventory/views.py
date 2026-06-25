@@ -363,6 +363,7 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
             StockEntryDocument.objects
             .prefetch_related("lines__warehouse", "lines__item")
             .filter(status=StockEntryDocument.Status.CONFIRMED)
+            .order_by("-entry_date", "-id")[:20]
         ):
             for line in document.lines.all():
                 entry_documents.append({
@@ -384,6 +385,7 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
             StockExitDocument.objects
             .prefetch_related("lines__warehouse", "lines__item")
             .filter(status=StockExitDocument.Status.CONFIRMED)
+            .order_by("-exit_date", "-id")[:20]
         ):
             for line in document.lines.all():
                 exit_documents.append({
@@ -408,7 +410,11 @@ class StockMovementHistoryView(TenantRequiredMixin, APIView):
             + entry_documents
             + exit_documents
         )
-        movements.sort(key=lambda row: row["date"], reverse=True)
+        movements = sorted(
+            movements,
+            key=lambda movement: movement["date"],
+            reverse=True,
+        )[:10]
 
         return Response(movements)
 

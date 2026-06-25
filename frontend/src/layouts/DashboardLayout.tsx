@@ -73,9 +73,9 @@ export function DashboardLayout() {
       links: [
         { label: "Current Stock", to: "/current-stock", icon: Boxes },
         { label: "Stock Movements", to: "/stock-movements", icon: FileClock },
-        { label: "Stock Entries", to: "/stock-entries", icon: PackagePlus },
+        // { label: "Stock Entries", to: "/stock-entries", icon: PackagePlus },
+        // { label: "Stock Exits", to: "/stock-exits", icon: PackageMinus },
         { label: "Entry Documents", to: "/stock-entry-documents", icon: PackagePlus },
-        { label: "Stock Exits", to: "/stock-exits", icon: PackageMinus },
         { label: "Exit Documents", to: "/stock-exit-documents", icon: PackageMinus },
         { label: "Stock Transfers", to: "/stock-transfers", icon: Repeat },
         ...(canManageAdjustments(tenantRole)

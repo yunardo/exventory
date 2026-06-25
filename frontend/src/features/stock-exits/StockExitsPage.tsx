@@ -124,6 +124,9 @@ export function StockExitsPage() {
         <p className="text-muted-foreground">
           Register outgoing stock for the selected workspace.
         </p>
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Legacy page. New stock exits should be created from Exit Documents.
+        </p>
       </div>
 
       {canCreate && (

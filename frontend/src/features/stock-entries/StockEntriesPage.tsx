@@ -111,6 +111,9 @@ export function StockEntriesPage() {
         <p className="text-muted-foreground">
           Register incoming stock for the selected workspace.
         </p>
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Legacy page. New stock entries should be created from Entry Documents.
+        </p>
       </div>
 
       {canCreate && (
