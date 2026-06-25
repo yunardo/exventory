@@ -400,6 +400,7 @@ class StockEntryDocument(TenantAwareModel):
 
     class Meta:
         ordering = ["-entry_date", "-id"]
+        unique_together = (("tenant", "document_number"),)
 
     def __str__(self):
         return f"{self.document_type} {self.document_number}"
@@ -493,6 +494,7 @@ class StockExitDocument(TenantAwareModel):
 
     class Meta:
         ordering = ["-exit_date", "-id"]
+        unique_together = (("tenant", "document_number"),)
 
     def __str__(self):
         return f"{self.document_type} {self.document_number}"
