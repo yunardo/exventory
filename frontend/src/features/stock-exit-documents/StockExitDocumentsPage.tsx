@@ -38,6 +38,12 @@ export function StockExitDocumentsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [documentPdf, setDocumentPdf] = useState<File | null>(null);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [requesterFilter, setRequesterFilter] = useState("");
+  const [unitFilter, setUnitFilter] = useState("");
+  const [documentNumberFilter, setDocumentNumberFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const {
     register,
@@ -89,8 +95,25 @@ export function StockExitDocumentsPage() {
   });
 
   const { data: documents = [], isLoading, isError } = useQuery({
-    queryKey: ["stock-exit-documents", tenantSlug],
-    queryFn: getStockExitDocuments,
+    queryKey: [
+      "stock-exit-documents",
+      tenantSlug,
+      statusFilter,
+      requesterFilter,
+      unitFilter,
+      documentNumberFilter,
+      dateFrom,
+      dateTo,
+    ],
+    queryFn: () =>
+      getStockExitDocuments({
+        status: statusFilter || undefined,
+        requester: requesterFilter || undefined,
+        requesting_unit: unitFilter || undefined,
+        document_number: documentNumberFilter || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      }),
   });
 
   const createMutation = useMutation({
@@ -404,6 +427,50 @@ export function StockExitDocumentsPage() {
         </CardHeader>
 
         <CardContent>
+
+          <div className="mb-4 grid gap-3 md:grid-cols-6">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">All statuses</option>
+              <option value="draft">Draft</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <Input
+              placeholder="Requester"
+              value={requesterFilter}
+              onChange={(e) => setRequesterFilter(e.target.value)}
+            />
+
+            <Input
+              placeholder="Requesting unit"
+              value={unitFilter}
+              onChange={(e) => setUnitFilter(e.target.value)}
+            />
+
+            <Input
+              placeholder="Document number"
+              value={documentNumberFilter}
+              onChange={(e) => setDocumentNumberFilter(e.target.value)}
+            />
+
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
+          
           {isLoading && <p className="text-muted-foreground">Loading...</p>}
 
           {isError && (

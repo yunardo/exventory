@@ -52,10 +52,29 @@ export type CreateStockExitDocumentPayload = {
   }>;
 };
 
-export async function getStockExitDocuments() {
+export type StockExitDocumentFilters = {
+  status?: string;
+  requester?: string;
+  requesting_unit?: string;
+  document_number?: string;
+  date_from?: string;
+  date_to?: string;
+};
+
+export async function getStockExitDocuments(
+  filters: StockExitDocumentFilters = {}
+) {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.append(key, value);
+  });
+
+  const query = params.toString();
+
   const response = await tenantApiClient.get<
     StockExitDocument[] | PaginatedResponse<StockExitDocument>
-  >("/api/stock-exit-documents/");
+  >(query ? `/api/stock-exit-documents/?${query}` : "/api/stock-entry-documents/");
 
   return unwrapPaginatedResponse(response.data);
 }

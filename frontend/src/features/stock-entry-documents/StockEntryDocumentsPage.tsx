@@ -37,6 +37,11 @@ export function StockEntryDocumentsPage() {
   const queryClient = useQueryClient();
   const [documentPdf, setDocumentPdf] = useState<File | null>(null);
   const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [documentNumberFilter, setDocumentNumberFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const {
     register,
@@ -80,8 +85,23 @@ export function StockEntryDocumentsPage() {
   });
 
   const { data: documents = [], isLoading, isError } = useQuery({
-    queryKey: ["stock-entry-documents", tenantSlug],
-    queryFn: getStockEntryDocuments,
+    queryKey: [
+      "stock-entry-documents",
+      tenantSlug,
+      statusFilter,
+      supplierFilter,
+      documentNumberFilter,
+      dateFrom,
+      dateTo,
+    ],
+    queryFn: () =>
+      getStockEntryDocuments({
+        status: statusFilter || undefined,
+        supplier: supplierFilter || undefined,
+        document_number: documentNumberFilter || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      }),
   });
 
   const createMutation = useMutation({
@@ -361,6 +381,44 @@ export function StockEntryDocumentsPage() {
         </CardHeader>
 
         <CardContent>
+
+          <div className="mb-4 grid gap-3 md:grid-cols-5">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">All statuses</option>
+              <option value="draft">Draft</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <Input
+              placeholder="Supplier"
+              value={supplierFilter}
+              onChange={(e) => setSupplierFilter(e.target.value)}
+            />
+
+            <Input
+              placeholder="Document number"
+              value={documentNumberFilter}
+              onChange={(e) => setDocumentNumberFilter(e.target.value)}
+            />
+
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
+
           {isLoading && <p className="text-muted-foreground">Loading...</p>}
 
           {isError && (

@@ -1510,11 +1510,34 @@ class StockEntryDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSe
     ]
 
     def get_queryset(self):
-        return (
+        queryset = (
             StockEntryDocument.objects
             .prefetch_related("lines__warehouse", "lines__item")
             .all()
         )
+
+        status_filter = self.request.query_params.get("status")
+        supplier = self.request.query_params.get("supplier")
+        document_number = self.request.query_params.get("document_number")
+        date_from = self.request.query_params.get("date_from")
+        date_to = self.request.query_params.get("date_to")
+
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        if supplier:
+            queryset = queryset.filter(supplier_name__icontains=supplier)
+
+        if document_number:
+            queryset = queryset.filter(document_number__icontains=document_number)
+
+        if date_from:
+            queryset = queryset.filter(entry_date__gte=date_from)
+
+        if date_to:
+            queryset = queryset.filter(entry_date__lte=date_to)
+
+        return queryset.order_by("-entry_date", "-id")
 
     @transaction.atomic
     @action(detail=True, methods=["post"])
@@ -1682,7 +1705,7 @@ class StockExitDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet
     ]
 
     def get_queryset(self):
-        return (
+        queryset = (
             StockExitDocument.objects
             .prefetch_related(
                 "lines__warehouse",
@@ -1691,6 +1714,33 @@ class StockExitDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet
             )
             .all()
         )
+
+        status_filter = self.request.query_params.get("status")
+        requester = self.request.query_params.get("requester")
+        requesting_unit = self.request.query_params.get("requesting_unit")
+        document_number = self.request.query_params.get("document_number")
+        date_from = self.request.query_params.get("date_from")
+        date_to = self.request.query_params.get("date_to")
+
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        if requester:
+            queryset = queryset.filter(requester_name__icontains=requester)
+
+        if requesting_unit:
+            queryset = queryset.filter(requesting_unit__icontains=requesting_unit)
+
+        if document_number:
+            queryset = queryset.filter(document_number__icontains=document_number)
+
+        if date_from:
+            queryset = queryset.filter(exit_date__gte=date_from)
+
+        if date_to:
+            queryset = queryset.filter(exit_date__lte=date_to)
+
+        return queryset.order_by("-exit_date", "-id")
 
     @transaction.atomic
     @action(detail=True, methods=["post"])

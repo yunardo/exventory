@@ -54,10 +54,28 @@ export type CreateStockEntryDocumentPayload = {
   }>;
 };
 
-export async function getStockEntryDocuments() {
+export type StockEntryDocumentFilters = {
+  status?: string;
+  supplier?: string;
+  document_number?: string;
+  date_from?: string;
+  date_to?: string;
+};
+
+export async function getStockEntryDocuments(
+  filters: StockEntryDocumentFilters = {}
+) {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.append(key, value);
+  });
+
+  const query = params.toString();
+
   const response = await tenantApiClient.get<
     StockEntryDocument[] | PaginatedResponse<StockEntryDocument>
-  >("/api/stock-entry-documents/");
+  >(query ? `/api/stock-entry-documents/?${query}` : "/api/stock-entry-documents/");
 
   return unwrapPaginatedResponse(response.data);
 }
