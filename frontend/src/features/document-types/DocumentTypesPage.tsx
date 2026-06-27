@@ -8,6 +8,7 @@ import {
   seedDefaultDocumentTypes,
   updateDocumentType,
   type CreateDocumentTypePayload,
+  type DocumentMovementType,
   type DocumentType,
 } from "./api";
 
@@ -27,10 +28,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useState } from "react";
 
 export function DocumentTypesPage() {
   const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<Partial<CreateDocumentTypePayload>>({});
 
   const {
     register,
@@ -115,6 +119,41 @@ export function DocumentTypesPage() {
       id: documentType.id,
       requires_pdf: !documentType.requires_pdf,
     });
+  }
+
+  function startEdit(documentType: DocumentType) {
+    setEditingId(documentType.id);
+    setEditValues({
+      code: documentType.code,
+      name: documentType.name,
+      movement_type: documentType.movement_type,
+      requires_supplier: documentType.requires_supplier,
+      requires_supplier_tax_id: documentType.requires_supplier_tax_id,
+      requires_requester: documentType.requires_requester,
+      requires_requesting_unit: documentType.requires_requesting_unit,
+      requires_pdf: documentType.requires_pdf,
+      is_active: documentType.is_active,
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditValues({});
+  }
+
+  function saveEdit(id: number) {
+    updateMutation.mutate(
+      {
+        id,
+        ...editValues,
+      },
+      {
+        onSuccess: () => {
+          setEditingId(null);
+          setEditValues({});
+        },
+      }
+    );
   }
 
   return (
@@ -265,50 +304,127 @@ export function DocumentTypesPage() {
 
               <TableBody>
                 {documentTypes.map((documentType) => {
-                  const rules = [
-                    documentType.requires_supplier ? "Supplier" : null,
-                    documentType.requires_supplier_tax_id ? "NIT" : null,
-                    documentType.requires_requester ? "Requester" : null,
-                    documentType.requires_requesting_unit ? "Unit" : null,
-                    documentType.requires_pdf ? "PDF" : null,
-                  ].filter(Boolean);
+                  const isEditing = editingId === documentType.id;
 
                   return (
                     <TableRow key={documentType.id}>
-                      <TableCell className="font-medium">
-                        {documentType.code}
-                      </TableCell>
-                      <TableCell>{documentType.name}</TableCell>
-                      <TableCell>{documentType.movement_type}</TableCell>
                       <TableCell>
-                        {rules.length > 0 ? rules.join(", ") : "-"}
+                        {isEditing ? (
+                          <Input
+                            value={editValues.code ?? ""}
+                            onChange={(e) =>
+                              setEditValues((v) => ({ ...v, code: e.target.value }))
+                            }
+                          />
+                        ) : (
+                          <span className="font-medium">{documentType.code}</span>
+                        )}
                       </TableCell>
+
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            value={editValues.name ?? ""}
+                            onChange={(e) =>
+                              setEditValues((v) => ({ ...v, name: e.target.value }))
+                            }
+                          />
+                        ) : (
+                          documentType.name
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        {isEditing ? (
+                          <select
+                            value={editValues.movement_type ?? "entry"}
+                            onChange={(e) =>
+                              setEditValues((v) => ({
+                                ...v,
+                                movement_type: e.target.value as DocumentMovementType,
+                              }))
+                            }
+                            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          >
+                            <option value="entry">Entry</option>
+                            <option value="exit">Exit</option>
+                            <option value="both">Both</option>
+                          </select>
+                        ) : (
+                          documentType.movement_type
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        {isEditing ? (
+                          <div className="grid gap-2 text-sm">
+                            {[
+                              ["requires_supplier", "Supplier"],
+                              ["requires_supplier_tax_id", "NIT"],
+                              ["requires_requester", "Requester"],
+                              ["requires_requesting_unit", "Unit"],
+                              ["requires_pdf", "PDF"],
+                              ["is_active", "Active"],
+                            ].map(([key, label]) => (
+                              <label key={key} className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(
+                                    editValues[key as keyof CreateDocumentTypePayload]
+                                  )}
+                                  onChange={(e) =>
+                                    setEditValues((v) => ({
+                                      ...v,
+                                      [key]: e.target.checked,
+                                    }))
+                                  }
+                                />
+                                {label}
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          [
+                            documentType.requires_supplier ? "Supplier" : null,
+                            documentType.requires_supplier_tax_id ? "NIT" : null,
+                            documentType.requires_requester ? "Requester" : null,
+                            documentType.requires_requesting_unit ? "Unit" : null,
+                            documentType.requires_pdf ? "PDF" : null,
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "-"
+                        )}
+                      </TableCell>
+
                       <TableCell>
                         {documentType.is_active ? "Active" : "Inactive"}
                       </TableCell>
+
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={updateMutation.isPending}
-                            onClick={() => toggleRequiresPdf(documentType)}
-                          >
-                            {documentType.requires_pdf
-                              ? "PDF optional"
-                              : "Require PDF"}
-                          </Button>
+                          {isEditing ? (
+                            <>
+                              <Button
+                                size="sm"
+                                disabled={updateMutation.isPending}
+                                onClick={() => saveEdit(documentType.id)}
+                              >
+                                Save
+                              </Button>
 
-                          <Button
-                            size="sm"
-                            variant={
-                              documentType.is_active ? "destructive" : "outline"
-                            }
-                            disabled={updateMutation.isPending}
-                            onClick={() => toggleActive(documentType)}
-                          >
-                            {documentType.is_active ? "Disable" : "Enable"}
-                          </Button>
+                              <Button size="sm" variant="outline" onClick={cancelEdit}>
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => startEdit(documentType)}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
