@@ -36,10 +36,13 @@ export type StockEntryDocument = {
   cancelled_at: string | null;
   cancellation_reason: string;
   lines_detail: StockEntryDocumentLine[];
+  document_type_ref: number | null;
+  document_type_ref_code: string | null;
+  document_type_ref_name: string | null;
 };
 
 export type CreateStockEntryDocumentPayload = {
-  document_type: string;
+  document_type_ref: number;
   supplier_name: string;
   supplier_tax_id?: string;
   entry_date: string;

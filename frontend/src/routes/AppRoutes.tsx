@@ -30,6 +30,7 @@ import { StockEntryDocumentsPage } from "@/features/stock-entry-documents/StockE
 import { StockExitDocumentsPage } from "@/features/stock-exit-documents/StockExitDocumentsPage";
 import { StockEntryDocumentDetailPage } from "@/features/stock-entry-documents/StockEntryDocumentDetailPage";
 import { StockExitDocumentDetailPage } from "@/features/stock-exit-documents/StockExitDocumentDetailPage";
+import { DocumentTypesPage } from "@/features/document-types/DocumentTypesPage";
 
 export function AppRoutes() {
   return (
@@ -85,6 +86,7 @@ export function AppRoutes() {
                   element={<UFVRevaluationRunDetailPage />}
                 />
               </Route>
+              <Route path="/document-types" element={<DocumentTypesPage />} />
             </Route>
           </Route>
         </Route>

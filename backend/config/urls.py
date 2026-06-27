@@ -42,6 +42,7 @@ from apps.inventory.views import UFVRevaluationApplyView
 from apps.inventory.views import UFVRevaluationRunViewSet
 from apps.inventory.views import UFVRevaluationRunExportView
 from apps.inventory.views import UFVRevaluationRunPdfView
+from apps.inventory.views import DocumentTypeViewSet
 from apps.inventory.views import StockEntryDocumentViewSet, StockExitDocumentViewSet
 from apps.tenancy.views import MeView, MyTenantsView, TenantMembershipViewSet
 from apps.tenancy.auth_views import TenantTokenObtainPairView
@@ -104,11 +105,15 @@ router.register(
     StockEntryDocumentViewSet,
     basename="stock-entry-documents",
 )
-
 router.register(
     r"stock-exit-documents",
     StockExitDocumentViewSet,
     basename="stock-exit-documents",
+)
+router.register(
+    r"document-types",
+    DocumentTypeViewSet,
+    basename="document-types",
 )
 
 urlpatterns = [

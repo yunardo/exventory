@@ -24,6 +24,7 @@ import {
   Calculator,
   TrendingUp,
   History,
+  FileText,
 } from "lucide-react";
 
 type NavLinkItem = {
@@ -107,6 +108,7 @@ export function DashboardLayout() {
     {
       title: "Settings",
       links: [
+        { label: "Document Types", to: "/document-types", icon: FileText },
         { label: "Tenant Users", to: "/tenant-memberships", icon: Users },
         { label: "Invitations", to: "/tenant-invitations", icon: Mail },
         { label: "Company Settings", to: "/tenant-settings", icon: Settings },

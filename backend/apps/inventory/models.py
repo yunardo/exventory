@@ -398,6 +398,14 @@ class StockEntryDocument(TenantAwareModel):
     cancelled_at = models.DateTimeField(null=True, blank=True)
     cancellation_reason = models.TextField(blank=True)
 
+    document_type_ref = models.ForeignKey(
+        "DocumentType",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="entry_documents",
+    )
+
     class Meta:
         ordering = ["-entry_date", "-id"]
         unique_together = (("tenant", "document_number"),)
@@ -492,6 +500,14 @@ class StockExitDocument(TenantAwareModel):
     cancelled_at = models.DateTimeField(null=True, blank=True)
     cancellation_reason = models.TextField(blank=True)
 
+    document_type_ref = models.ForeignKey(
+        "DocumentType",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="exit_documents",
+    )
+
     class Meta:
         ordering = ["-exit_date", "-id"]
         unique_together = (("tenant", "document_number"),)
@@ -561,3 +577,33 @@ class DocumentSequence(TenantAwareModel):
 
     def __str__(self):
         return f"{self.code}-{self.year}-{self.last_number}"
+
+
+class DocumentType(TenantAwareModel):
+    class MovementType(models.TextChoices):
+        ENTRY = "entry", "Entry"
+        EXIT = "exit", "Exit"
+        BOTH = "both", "Both"
+
+    code = models.CharField(max_length=20)
+    name = models.CharField(max_length=120)
+
+    movement_type = models.CharField(
+        max_length=20,
+        choices=MovementType.choices,
+    )
+
+    requires_supplier = models.BooleanField(default=False)
+    requires_supplier_tax_id = models.BooleanField(default=False)
+    requires_requester = models.BooleanField(default=False)
+    requires_requesting_unit = models.BooleanField(default=False)
+    requires_pdf = models.BooleanField(default=False)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["movement_type", "code"]
+        unique_together = (("tenant", "code"),)
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"

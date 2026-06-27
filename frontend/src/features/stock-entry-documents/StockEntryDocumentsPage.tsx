@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDocumentTypes } from "../document-types/api";
 
 export function StockEntryDocumentsPage() {
   const { tenantSlug } = useTenant();
@@ -43,15 +44,25 @@ export function StockEntryDocumentsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  const { data: documentTypes = [] } = useQuery({
+    queryKey: ["document-types", tenantSlug, "entry"],
+    queryFn: () =>
+      getDocumentTypes({
+        movement_type: "entry",
+        is_active: true,
+      }),
+  });
+
   const {
     register,
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<CreateStockEntryDocumentPayload>({
     defaultValues: {
-      document_type: "invoice",
+      document_type_ref: 0,
       supplier_name: "",
       supplier_tax_id: "",
       entry_date: new Date().toISOString().slice(0, 10),
@@ -68,6 +79,12 @@ export function StockEntryDocumentsPage() {
       ],
     },
   });
+
+  const selectedDocumentTypeId = watch("document_type_ref");
+
+  const selectedDocumentType = documentTypes.find(
+    (type) => type.id === Number(selectedDocumentTypeId)
+  );
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -112,7 +129,7 @@ export function StockEntryDocumentsPage() {
       });
 
       reset({
-        document_type: "invoice",
+        document_type_ref: 0,
         supplier_name: "",
         supplier_tax_id: "",
         entry_date: new Date().toISOString().slice(0, 10),
@@ -171,7 +188,7 @@ export function StockEntryDocumentsPage() {
   function onSubmit(values: CreateStockEntryDocumentPayload) {
     const formData = new FormData();
 
-    formData.append("document_type", values.document_type);
+    formData.append("document_type_ref", String(values.document_type_ref));
     formData.append("supplier_name", values.supplier_name);
     formData.append("supplier_tax_id", values.supplier_tax_id ?? "");
     formData.append("entry_date", values.entry_date);
@@ -181,6 +198,11 @@ export function StockEntryDocumentsPage() {
 
     if (documentPdf instanceof File) {
       formData.append("document_pdf", documentPdf);
+    }
+
+    if (selectedDocumentType?.requires_pdf && !documentPdf) {
+      alert("This document type requires a PDF attachment.");
+      return;
     }
 
     createMutation.mutate(formData);
@@ -219,15 +241,23 @@ export function StockEntryDocumentsPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <Input
-                  placeholder="Document type"
-                  {...register("document_type", {
+                <select
+                  {...register("document_type_ref", {
+                    valueAsNumber: true,
                     required: "Document type is required",
                   })}
-                />
-                {errors.document_type && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.document_type.message}
+                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value={0}>Document type</option>
+                  {documentTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.code} - {type.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedDocumentType?.requires_pdf && (
+                  <p className="text-sm text-amber-600">
+                    This document type requires a PDF attachment.
                   </p>
                 )}
               </div>
@@ -240,7 +270,9 @@ export function StockEntryDocumentsPage() {
                 <Input
                   placeholder="Supplier name"
                   {...register("supplier_name", {
-                    required: "Supplier name is required",
+                    required: selectedDocumentType?.requires_supplier
+                      ? "Supplier name is required"
+                      : false,
                   })}
                 />
                 {errors.supplier_name && (
@@ -251,7 +283,14 @@ export function StockEntryDocumentsPage() {
               </div>
 
               <div>
-                <Input placeholder="Supplier NIT" {...register("supplier_tax_id")} />
+                <Input
+                  placeholder="Supplier NIT"
+                  {...register("supplier_tax_id", {
+                    required: selectedDocumentType?.requires_supplier_tax_id
+                      ? "Supplier NIT is required"
+                      : false,
+                  })}
+                />
               </div>
 
               <div>
@@ -451,7 +490,7 @@ export function StockEntryDocumentsPage() {
                   <TableRow key={document.id}>
                     <TableCell>{document.entry_date}</TableCell>
                     <TableCell>
-                      {document.document_type} {document.document_number}
+                      {document.document_type_ref_code ?? document.document_type} {document.document_number}
                     </TableCell>
                     <TableCell>
                       {document.supplier_name}

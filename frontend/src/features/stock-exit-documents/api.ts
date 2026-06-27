@@ -34,10 +34,13 @@ export type StockExitDocument = {
   cancelled_at: string | null;
   cancellation_reason: string;
   lines_detail: StockExitDocumentLine[];
+  document_type_ref: number | null;
+  document_type_ref_code: string | null;
+  document_type_ref_name: string | null;
 };
 
 export type CreateStockExitDocumentPayload = {
-  document_type: string;
+  document_type_ref: number;
   requester_name: string;
   requesting_unit: string;
   responsible_name?: string;

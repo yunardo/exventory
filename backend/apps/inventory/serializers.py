@@ -12,7 +12,7 @@ from .models import StockEntry, StockExit, StockLayer, StockExitAllocation
 from .models import InventoryAdjustment, InventoryAdjustmentAllocation
 from .models import StockTransfer, StockTransferAllocation, UFVRate
 from .models import UFVRevaluationRun, UFVRevaluationRunLine
-from .models import UFVRate
+from .models import DocumentType
 
 from .models import (
     StockEntryDocument,
@@ -535,6 +535,15 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
+    document_type_ref_name = serializers.CharField(
+        source="document_type_ref.name",
+        read_only=True,
+    )
+
+    document_type_ref_code = serializers.CharField(
+        source="document_type_ref.code",
+        read_only=True,
+    )
 
     class Meta:
         model = StockEntryDocument
@@ -554,6 +563,9 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
             "cancellation_reason",
             "lines",
             "lines_detail",
+            "document_type_ref",
+            "document_type_ref_code",
+            "document_type_ref_name",
         ]
         read_only_fields = [
             "id",
@@ -599,6 +611,9 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
             code="ING",
             date=validated_data["entry_date"],
         )
+
+        if validated_data.get("document_type_ref"):
+            validated_data["document_type"] = validated_data["document_type_ref"].code
 
         document = StockEntryDocument.objects.create(**validated_data)
 
@@ -672,6 +687,35 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
 
         document.total_amount = total
         document.save(update_fields=["total_amount"])
+    
+    def validate(self, attrs):
+        document_type_ref = attrs.get("document_type_ref")
+
+        if document_type_ref:
+            if document_type_ref.movement_type not in [
+                DocumentType.MovementType.ENTRY,
+                DocumentType.MovementType.BOTH,
+            ]:
+                raise serializers.ValidationError({
+                    "document_type_ref": "This document type is not valid for stock entries."
+                })
+
+            if document_type_ref.requires_supplier and not attrs.get("supplier_name"):
+                raise serializers.ValidationError({
+                    "supplier_name": "Supplier name is required for this document type."
+                })
+
+            if document_type_ref.requires_supplier_tax_id and not attrs.get("supplier_tax_id"):
+                raise serializers.ValidationError({
+                    "supplier_tax_id": "Supplier tax ID is required for this document type."
+                })
+
+            if document_type_ref.requires_pdf and not attrs.get("document_pdf"):
+                raise serializers.ValidationError({
+                    "document_pdf": "PDF is required for this document type."
+                })
+
+        return attrs
 
 
 class StockExitLineSerializer(serializers.ModelSerializer):
@@ -705,6 +749,15 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
+    document_type_ref_name = serializers.CharField(
+        source="document_type_ref.name",
+        read_only=True,
+    )
+
+    document_type_ref_code = serializers.CharField(
+        source="document_type_ref.code",
+        read_only=True,
+    )
 
     class Meta:
         model = StockExitDocument
@@ -725,6 +778,9 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
             "cancellation_reason",
             "lines",
             "lines_detail",
+            "document_type_ref",
+            "document_type_ref_code",
+            "document_type_ref_name",
         ]
         read_only_fields = [
             "id",
@@ -769,6 +825,32 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
                 "lines": "At least one line is required."
             })
 
+        document_type_ref = attrs.get("document_type_ref")
+
+        if document_type_ref:
+            if document_type_ref.movement_type not in [
+                DocumentType.MovementType.EXIT,
+                DocumentType.MovementType.BOTH,
+            ]:
+                raise serializers.ValidationError({
+                    "document_type_ref": "This document type is not valid for stock exits."
+                })
+
+            if document_type_ref.requires_requester and not attrs.get("requester_name"):
+                raise serializers.ValidationError({
+                    "requester_name": "Requester name is required for this document type."
+                })
+
+            if document_type_ref.requires_requesting_unit and not attrs.get("requesting_unit"):
+                raise serializers.ValidationError({
+                    "requesting_unit": "Requesting unit is required for this document type."
+                })
+
+            if document_type_ref.requires_pdf and not attrs.get("document_pdf"):
+                raise serializers.ValidationError({
+                    "document_pdf": "PDF is required for this document type."
+                })
+
         return attrs
 
     def create(self, validated_data):
@@ -780,6 +862,9 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
             code="SAL",
             date=validated_data["exit_date"],
         )
+
+        if validated_data.get("document_type_ref"):
+            validated_data["document_type"] = validated_data["document_type_ref"].code
 
         document = StockExitDocument.objects.create(**validated_data)
 
@@ -822,3 +907,20 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
                 )
 
         return instance
+
+
+class DocumentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentType
+        fields = [
+            "id",
+            "code",
+            "name",
+            "movement_type",
+            "requires_supplier",
+            "requires_supplier_tax_id",
+            "requires_requester",
+            "requires_requesting_unit",
+            "requires_pdf",
+            "is_active",
+        ]

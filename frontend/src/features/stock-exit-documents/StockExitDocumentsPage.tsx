@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDocumentTypes } from "../document-types/api";
 
 export function StockExitDocumentsPage() {
   const { tenantSlug } = useTenant();
@@ -45,6 +46,15 @@ export function StockExitDocumentsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  const { data: documentTypes = [] } = useQuery({
+    queryKey: ["document-types", tenantSlug, "exit"],
+    queryFn: () =>
+      getDocumentTypes({
+        movement_type: "exit",
+        is_active: true,
+      }),
+  });
+
   const {
     register,
     control,
@@ -54,7 +64,7 @@ export function StockExitDocumentsPage() {
     formState: { errors },
   } = useForm<CreateStockExitDocumentPayload>({
     defaultValues: {
-      document_type: "request",
+      document_type_ref: 0,
       requester_name: "",
       requesting_unit: "",
       responsible_name: "",
@@ -71,6 +81,12 @@ export function StockExitDocumentsPage() {
       ],
     },
   });
+
+  const selectedDocumentTypeId = watch("document_type_ref");
+
+  const selectedDocumentType = documentTypes.find(
+    (type) => type.id === Number(selectedDocumentTypeId)
+  );
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -124,7 +140,7 @@ export function StockExitDocumentsPage() {
       });
 
       reset({
-        document_type: "request",
+        document_type_ref: 0,
         requester_name: "",
         requesting_unit: "",
         responsible_name: "",
@@ -193,7 +209,7 @@ export function StockExitDocumentsPage() {
   function onSubmit(values: CreateStockExitDocumentPayload) {
     const formData = new FormData();
 
-    formData.append("document_type", values.document_type);
+    formData.append("document_type_ref", String(values.document_type_ref));
     formData.append("requester_name", values.requester_name);
     formData.append("requesting_unit", values.requesting_unit);
     formData.append("responsible_name", values.responsible_name ?? "");
@@ -204,6 +220,11 @@ export function StockExitDocumentsPage() {
 
     if (documentPdf instanceof File) {
       formData.append("document_pdf", documentPdf);
+    }
+
+    if (selectedDocumentType?.requires_pdf && !documentPdf) {
+      alert("This document type requires a PDF attachment.");
+      return;
     }
 
     createMutation.mutate(formData);
@@ -242,17 +263,20 @@ export function StockExitDocumentsPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <Input
-                  placeholder="Document type"
-                  {...register("document_type", {
+                <select
+                  {...register("document_type_ref", {
+                    valueAsNumber: true,
                     required: "Document type is required",
                   })}
-                />
-                {errors.document_type && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.document_type.message}
-                  </p>
-                )}
+                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value={0}>Document type</option>
+                  {documentTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.code} - {type.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -263,7 +287,9 @@ export function StockExitDocumentsPage() {
                 <Input
                   placeholder="Requester name"
                   {...register("requester_name", {
-                    required: "Requester name is required",
+                    required: selectedDocumentType?.requires_requester
+                      ? "Requester name is required"
+                      : false,
                   })}
                 />
                 {errors.requester_name && (
@@ -277,7 +303,9 @@ export function StockExitDocumentsPage() {
                 <Input
                   placeholder="Requesting unit"
                   {...register("requesting_unit", {
-                    required: "Requesting unit is required",
+                    required: selectedDocumentType?.requires_requesting_unit
+                      ? "Requesting unit is required"
+                      : false,
                   })}
                 />
                 {errors.requesting_unit && (
@@ -504,7 +532,7 @@ export function StockExitDocumentsPage() {
                   <TableRow key={document.id}>
                     <TableCell>{document.exit_date}</TableCell>
                     <TableCell>
-                      {document.document_type} {document.document_number}
+                      {document.document_type_ref_code ?? document.document_type} {document.document_number}
                     </TableCell>
                     <TableCell>{document.requester_name}</TableCell>
                     <TableCell>{document.requesting_unit}</TableCell>

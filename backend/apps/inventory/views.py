@@ -19,6 +19,7 @@ from .models import (
     StockExitDocument,
     StockExitLine,
     StockExitLineAllocation,
+    DocumentType,
 )
 from .serializers import StockTransferSerializer
 from .serializers import WarehouseSerializer
@@ -31,6 +32,7 @@ from .serializers import UFVRevaluationRunSerializer
 from .serializers import (
     StockEntryDocumentSerializer,
     StockExitDocumentSerializer,
+    DocumentTypeSerializer,
 )
 from django.db import transaction, IntegrityError
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
@@ -1928,3 +1930,27 @@ class StockExitDocumentViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet
             content_type="application/pdf",
             filename=f"stock-exit-{document.document_number}.pdf",
         )
+
+
+class DocumentTypeViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
+    serializer_class = DocumentTypeSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember, HasTenantRole]
+
+    required_roles = [
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    ]
+
+    def get_queryset(self):
+        queryset = DocumentType.objects.all()
+
+        movement_type = self.request.query_params.get("movement_type")
+        is_active = self.request.query_params.get("is_active")
+
+        if movement_type:
+            queryset = queryset.filter(movement_type=movement_type)
+
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == "true")
+
+        return queryset
