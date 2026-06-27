@@ -7,7 +7,6 @@ import {
   getDocumentTypes,
   updateDocumentType,
   type CreateDocumentTypePayload,
-  type DocumentMovementType,
   type DocumentType,
 } from "./api";
 
