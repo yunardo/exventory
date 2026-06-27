@@ -606,9 +606,17 @@ class StockEntryDocumentSerializer(serializers.ModelSerializer):
         lines_data = validated_data.pop("lines", [])
         tenant = validated_data.get("tenant") or self.context["request"].tenant
 
+        document_type_ref = validated_data.get("document_type_ref")
+
+        sequence_code = (
+            document_type_ref.code
+            if document_type_ref
+            else "ING"
+        )
+
         validated_data["document_number"] = generate_document_number(
             tenant=tenant,
-            code="ING",
+            code=sequence_code,
             date=validated_data["entry_date"],
         )
 
@@ -857,9 +865,17 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
         lines_data = validated_data.pop("lines", [])
         tenant = validated_data.get("tenant") or self.context["request"].tenant
 
+        document_type_ref = validated_data.get("document_type_ref")
+
+        sequence_code = (
+            document_type_ref.code
+            if document_type_ref
+            else "SAL"
+        )
+
         validated_data["document_number"] = generate_document_number(
             tenant=tenant,
-            code="SAL",
+            code=sequence_code,
             date=validated_data["exit_date"],
         )
 
