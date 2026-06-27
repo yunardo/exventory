@@ -1954,3 +1954,79 @@ class DocumentTypeViewSet(AuditCrudMixin, TenantRequiredMixin, ModelViewSet):
             queryset = queryset.filter(is_active=is_active.lower() == "true")
 
         return queryset
+    
+    @action(detail=False, methods=["post"], url_path="seed-defaults")
+    def seed_defaults(self, request):
+        defaults = [
+            {
+                "code": "FAC",
+                "name": "Factura",
+                "movement_type": DocumentType.MovementType.ENTRY,
+                "requires_supplier": True,
+                "requires_supplier_tax_id": True,
+                "requires_requester": False,
+                "requires_requesting_unit": False,
+                "requires_pdf": True,
+                "is_active": True,
+            },
+            {
+                "code": "DON",
+                "name": "Donación",
+                "movement_type": DocumentType.MovementType.ENTRY,
+                "requires_supplier": True,
+                "requires_supplier_tax_id": False,
+                "requires_requester": False,
+                "requires_requesting_unit": False,
+                "requires_pdf": False,
+                "is_active": True,
+            },
+            {
+                "code": "SAL",
+                "name": "Vale de Salida",
+                "movement_type": DocumentType.MovementType.EXIT,
+                "requires_supplier": False,
+                "requires_supplier_tax_id": False,
+                "requires_requester": True,
+                "requires_requesting_unit": True,
+                "requires_pdf": False,
+                "is_active": True,
+            },
+            {
+                "code": "ACT",
+                "name": "Acta",
+                "movement_type": DocumentType.MovementType.BOTH,
+                "requires_supplier": False,
+                "requires_supplier_tax_id": False,
+                "requires_requester": False,
+                "requires_requesting_unit": False,
+                "requires_pdf": True,
+                "is_active": True,
+            },
+        ]
+
+        created = 0
+
+        for item in defaults:
+            _, was_created = DocumentType.objects.get_or_create(
+                tenant=request.tenant,
+                code=item["code"],
+                defaults=item,
+            )
+
+            if was_created:
+                created += 1
+
+        log_audit_event(
+            request=request,
+            action="seed",
+            entity="DocumentType",
+            status_code=200,
+            meta={
+                "created": created,
+            },
+        )
+
+        return Response({
+            "detail": "Default document types seeded.",
+            "created": created,
+        })

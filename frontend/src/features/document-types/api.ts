@@ -65,3 +65,12 @@ export async function updateDocumentType(
 
   return response.data;
 }
+
+export async function seedDefaultDocumentTypes() {
+  const response = await tenantApiClient.post<{
+    detail: string;
+    created: number;
+  }>("/api/document-types/seed-defaults/");
+
+  return response.data;
+}

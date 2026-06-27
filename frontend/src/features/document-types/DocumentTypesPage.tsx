@@ -5,6 +5,7 @@ import { useTenant } from "../../context/TenantContext";
 import {
   createDocumentType,
   getDocumentTypes,
+  seedDefaultDocumentTypes,
   updateDocumentType,
   type CreateDocumentTypePayload,
   type DocumentType,
@@ -89,6 +90,15 @@ export function DocumentTypesPage() {
     },
   });
 
+  const seedDefaultsMutation = useMutation({
+    mutationFn: seedDefaultDocumentTypes,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["document-types", tenantSlug],
+      });
+    },
+  });
+
   function onSubmit(values: CreateDocumentTypePayload) {
     createMutation.mutate(values);
   }
@@ -114,6 +124,15 @@ export function DocumentTypesPage() {
         <p className="text-muted-foreground">
           Configure document types and validation rules for inventory movements.
         </p>
+        <Button
+          variant="outline"
+          disabled={seedDefaultsMutation.isPending}
+          onClick={() => seedDefaultsMutation.mutate()}
+        >
+          {seedDefaultsMutation.isPending
+            ? "Creating..."
+            : "Create default types"}
+        </Button>
       </div>
 
       <Card>
