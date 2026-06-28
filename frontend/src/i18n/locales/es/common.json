@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "Exventory",
+    "description": "Plataforma SaaS de inventarios por Examine S.R.L."
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "create": "Crear",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "actions": "Acciones",
+    "status": "Estado",
+    "total": "Total"
+  },
+  "sidebar": {
+    "overview": "Resumen",
+    "inventory": "Inventario",
+    "catalog": "Catálogo",
+    "financial": "Financiero",
+    "settings": "Configuración",
+    "dashboard": "Dashboard",
+    "currentStock": "Stock actual",
+    "stockMovements": "Movimientos de stock",
+    "entryDocuments": "Documentos de ingreso",
+    "exitDocuments": "Documentos de salida",
+    "stockTransfers": "Transferencias",
+    "inventoryAdjustments": "Ajustes de inventario",
+    "kardex": "Kardex",
+    "inventoryValuation": "Valoración de inventario",
+    "warehouses": "Almacenes",
+    "items": "Ítems",
+    "ufvRates": "Tasas UFV",
+    "ufvRevaluation": "Revalorización UFV",
+    "ufvRuns": "Corridas UFV",
+    "tenantUsers": "Usuarios del tenant",
+    "invitations": "Invitaciones",
+    "companySettings": "Configuración de empresa",
+    "documentTypes": "Tipos de documento",
+    "auditLogs": "Logs de auditoría"
+  },
+  "layout": {
+    "changeWorkspace": "Cambiar workspace",
+    "logout": "Cerrar sesión",
+    "expandMenu": "Expandir menú",
+    "collapseMenu": "Colapsar menú"
+  }
+}

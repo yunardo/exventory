@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "Exventory",
+    "description": "SaaS Inventory Platform by Examine S.R.L."
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "create": "Create",
+    "confirm": "Confirm",
+    "back": "Back",
+    "actions": "Actions",
+    "status": "Status",
+    "total": "Total"
+  },
+  "sidebar": {
+    "overview": "Overview",
+    "inventory": "Inventory",
+    "catalog": "Catalog",
+    "financial": "Financial",
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "currentStock": "Current Stock",
+    "stockMovements": "Stock Movements",
+    "entryDocuments": "Entry Documents",
+    "exitDocuments": "Exit Documents",
+    "stockTransfers": "Stock Transfers",
+    "inventoryAdjustments": "Inventory Adjustments",
+    "kardex": "Kardex",
+    "inventoryValuation": "Inventory Valuation",
+    "warehouses": "Warehouses",
+    "items": "Items",
+    "ufvRates": "UFV Rates",
+    "ufvRevaluation": "UFV Revaluation",
+    "ufvRuns": "UFV Runs",
+    "tenantUsers": "Tenant Users",
+    "invitations": "Invitations",
+    "companySettings": "Company Settings",
+    "documentTypes": "Document Types",
+    "auditLogs": "Audit Logs"
+  },
+  "layout": {
+    "changeWorkspace": "Change workspace",
+    "logout": "Logout",
+    "expandMenu": "Expand menu",
+    "collapseMenu": "Collapse menu"
+  }
+}

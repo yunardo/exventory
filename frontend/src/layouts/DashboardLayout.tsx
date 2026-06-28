@@ -26,6 +26,7 @@ import {
   History,
   FileText,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type NavLinkItem = {
   label: string;
@@ -41,6 +42,7 @@ type NavGroup = {
 export function DashboardLayout() {
   const navigate = useNavigate();
   const { tenantSlug, tenantRole, clearTenant } = useTenant();
+  const { t, i18n } = useTranslation();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
@@ -66,54 +68,50 @@ export function DashboardLayout() {
 
   const navGroups: NavGroup[] = [
     {
-      title: "Overview",
-      links: [{ label: "Dashboard", to: "/dashboard", icon: Home }],
+      title: t("sidebar.overview"),
+      links: [
+        { label: t("sidebar.dashboard"), to: "/dashboard", icon: Home },
+      ],
     },
     {
-      title: "Inventory",
+      title: t("sidebar.inventory"),
       links: [
-        { label: "Current Stock", to: "/current-stock", icon: Boxes },
-        { label: "Stock Movements", to: "/stock-movements", icon: FileClock },
-        // { label: "Stock Entries", to: "/stock-entries", icon: PackagePlus },
-        // { label: "Stock Exits", to: "/stock-exits", icon: PackageMinus },
-        { label: "Entry Documents", to: "/stock-entry-documents", icon: PackagePlus },
-        { label: "Exit Documents", to: "/stock-exit-documents", icon: PackageMinus },
-        { label: "Stock Transfers", to: "/stock-transfers", icon: Repeat },
+        { label: t("sidebar.currentStock"), to: "/current-stock", icon: Boxes },
+        { label: t("sidebar.stockMovements"), to: "/stock-movements", icon: FileClock },
+        { label: t("sidebar.entryDocuments"), to: "/stock-entry-documents", icon: PackagePlus },
+        { label: t("sidebar.exitDocuments"), to: "/stock-exit-documents", icon: PackageMinus },
+        { label: t("sidebar.stockTransfers"), to: "/stock-transfers", icon: Repeat },
         ...(canManageAdjustments(tenantRole)
-          ? [{ label: "Inventory Adjustments", to: "/inventory-adjustments", icon: ClipboardList }]
+          ? [{ label: t("sidebar.inventoryAdjustments"), to: "/inventory-adjustments", icon: ClipboardList }]
           : []),
-        { label: "Kardex", to: "/kardex", icon: FileBarChart },
-        { label: "Inventory Valuation", to: "/inventory-valuation", icon: BarChart3 },
+        { label: t("sidebar.kardex"), to: "/kardex", icon: FileBarChart },
+        { label: t("sidebar.inventoryValuation"), to: "/inventory-valuation", icon: BarChart3 },
       ],
     },
     {
-      title: "Catalog",
+      title: t("sidebar.catalog"),
       links: [
-        { label: "Warehouses", to: "/warehouses", icon: Warehouse },
-        { label: "Items", to: "/items", icon: Package },
+        { label: t("sidebar.warehouses"), to: "/warehouses", icon: Warehouse },
+        { label: t("sidebar.items"), to: "/items", icon: Package },
       ],
     },
     {
-      title: "Financial",
+      title: t("sidebar.financial"),
       links: [
-        { label: "UFV Rates", to: "/ufv-rates", icon: Calculator },
-        { label: "UFV Revaluation", to: "/ufv-revaluation", icon: TrendingUp },
-        {
-          label: "UFV Runs",
-          to: "/ufv-revaluation-runs",
-          icon: History,
-        }
+        { label: t("sidebar.ufvRates"), to: "/ufv-rates", icon: Calculator },
+        { label: t("sidebar.ufvRevaluation"), to: "/ufv-revaluation", icon: TrendingUp },
+        { label: t("sidebar.ufvRuns"), to: "/ufv-revaluation-runs", icon: History },
       ],
     },
     {
-      title: "Settings",
+      title: t("sidebar.settings"),
       links: [
-        { label: "Document Types", to: "/document-types", icon: FileText },
-        { label: "Tenant Users", to: "/tenant-memberships", icon: Users },
-        { label: "Invitations", to: "/tenant-invitations", icon: Mail },
-        { label: "Company Settings", to: "/tenant-settings", icon: Settings },
+        { label: t("sidebar.tenantUsers"), to: "/tenant-memberships", icon: Users },
+        { label: t("sidebar.invitations"), to: "/tenant-invitations", icon: Mail },
+        { label: t("sidebar.companySettings"), to: "/tenant-settings", icon: Settings },
+        { label: t("sidebar.documentTypes"), to: "/document-types", icon: FileText },
         ...(canViewAuditLogs(tenantRole)
-          ? [{ label: "Audit Logs", to: "/audit-logs", icon: FileClock },]
+          ? [{ label: t("sidebar.auditLogs"), to: "/audit-logs", icon: FileClock }]
           : []),
       ],
     },
@@ -203,22 +201,31 @@ export function DashboardLayout() {
       >
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-8">
           <span className="text-sm text-slate-500">
-            SaaS Inventory Platform by Examine S.R.L.
+            {t("app.description")}
           </span>
 
           <div className="flex items-center gap-2">
+            <select
+              value={i18n.language}
+              onChange={(event) => i18n.changeLanguage(event.target.value)}
+              className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            >
+              <option value="es">ES</option>
+              <option value="en">EN</option>
+            </select>
+
             <button
               onClick={() => navigate("/tenants")}
               className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
-              Change workspace
+              {t("layout.changeWorkspace")}
             </button>
 
             <button
               onClick={handleLogout}
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
             >
-              Logout
+              {t("layout.logout")}
             </button>
           </div>
         </header>
