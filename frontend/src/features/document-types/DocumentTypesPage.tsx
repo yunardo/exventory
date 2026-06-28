@@ -29,12 +29,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function DocumentTypesPage() {
   const { tenantSlug } = useTenant();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValues, setEditValues] = useState<Partial<CreateDocumentTypePayload>>({});
+  const { t } = useTranslation();
 
   const {
     register,
@@ -145,9 +147,12 @@ export function DocumentTypesPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Document Types</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t("documentTypes.title")}
+        </h2>
+
         <p className="text-muted-foreground">
-          Configure document types and validation rules for inventory movements.
+          {t("documentTypes.description")}
         </p>
         <Button
           variant="outline"
@@ -155,14 +160,14 @@ export function DocumentTypesPage() {
           onClick={() => seedDefaultsMutation.mutate()}
         >
           {seedDefaultsMutation.isPending
-            ? "Creating..."
-            : "Create default types"}
+            ? t("common.loading")
+            : t("documentTypes.createDefaults")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>New Document Type</CardTitle>
+          <CardTitle>{t("documentTypes.newTitle")}</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -170,7 +175,7 @@ export function DocumentTypesPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <Input
-                  placeholder="Code, e.g. FAC"
+                  placeholder={t("documentTypes.code")}
                   {...register("code", {
                     required: "Code is required",
                   })}
@@ -184,7 +189,7 @@ export function DocumentTypesPage() {
 
               <div>
                 <Input
-                  placeholder="Name, e.g. Factura"
+                  placeholder={t("documentTypes.name")}
                   {...register("name", {
                     required: "Name is required",
                   })}
@@ -200,16 +205,16 @@ export function DocumentTypesPage() {
                 {...register("movement_type")}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="entry">Entry</option>
-                <option value="exit">Exit</option>
-                <option value="both">Both</option>
+                <option value="entry">{t("documentTypes.entry")}</option>
+                <option value="exit">{t("documentTypes.exit")}</option>
+                <option value="both">{t("documentTypes.both")}</option>
               </select>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...register("requires_supplier")} />
-                Requires supplier
+                {t("documentTypes.requiresSupplier")}
               </label>
 
               <label className="flex items-center gap-2 text-sm">
@@ -217,12 +222,12 @@ export function DocumentTypesPage() {
                   type="checkbox"
                   {...register("requires_supplier_tax_id")}
                 />
-                Requires supplier NIT
+                {t("documentTypes.requiresSupplierNit")}
               </label>
 
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...register("requires_requester")} />
-                Requires requester
+                {t("documentTypes.requiresRequester")}
               </label>
 
               <label className="flex items-center gap-2 text-sm">
@@ -230,27 +235,27 @@ export function DocumentTypesPage() {
                   type="checkbox"
                   {...register("requires_requesting_unit")}
                 />
-                Requires requesting unit
+                {t("documentTypes.requiresUnit")}
               </label>
 
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...register("requires_pdf")} />
-                Requires PDF
+                {t("documentTypes.requiresPdf")}
               </label>
 
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...register("is_active")} />
-                Active
+                {t("documentTypes.active")}
               </label>
             </div>
 
             <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating..." : "Create Document Type"}
+              {createMutation.isPending ? t("documentTypes.creating") : t("documentTypes.create")}
             </Button>
 
             {createMutation.isError && (
               <p className="text-sm text-red-600">
-                Could not create document type.
+                {t("documentTypes.errors.create")}
               </p>
             )}
           </form>
@@ -259,32 +264,32 @@ export function DocumentTypesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Document Types</CardTitle>
+          <CardTitle>{t("documentTypes.listTitle")}</CardTitle>
         </CardHeader>
 
         <CardContent>
-          {isLoading && <p className="text-muted-foreground">Loading...</p>}
+          {isLoading && <p className="text-muted-foreground">{t("common.loading")}</p>}
 
           {isError && (
             <p className="text-sm text-red-600">
-              Could not load document types.
+              {t("documentTypes.errors.load")}
             </p>
           )}
 
           {!isLoading && !isError && documentTypes.length === 0 && (
-            <p className="text-muted-foreground">No document types found.</p>
+            <p className="text-muted-foreground">{t("documentTypes.errors.empty")}</p>
           )}
 
           {!isLoading && !isError && documentTypes.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Movement</TableHead>
-                  <TableHead>Rules</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("documentTypes.code")}</TableHead>
+                  <TableHead>{t("documentTypes.name")}</TableHead>
+                  <TableHead>{t("documentTypes.movement")}</TableHead>
+                  <TableHead>{t("documentTypes.rules")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -339,9 +344,9 @@ export function DocumentTypesPage() {
                             }
                             className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                           >
-                            <option value="entry">Entry</option>
-                            <option value="exit">Exit</option>
-                            <option value="both">Both</option>
+                            <option value="entry">{t("documentTypes.entry")}</option>
+                            <option value="exit">{t("documentTypes.exit")}</option>
+                            <option value="both">{t("documentTypes.both")}</option>
                           </select>
                         ) : (
                           documentType.movement_type

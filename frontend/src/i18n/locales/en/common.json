@@ -47,5 +47,33 @@
     "logout": "Logout",
     "expandMenu": "Expand menu",
     "collapseMenu": "Collapse menu"
+  },
+  "documentTypes": {
+    "title": "Document Types",
+    "description": "Configure document types and validation rules for inventory movements.",
+    "newTitle": "New Document Type",
+    "listTitle": "Document Types",
+    "code": "Code",
+    "name": "Name",
+    "movement": "Movement",
+    "rules": "Rules",
+    "active": "Active",
+    "inactive": "Inactive",
+    "create": "Create Document Type",
+    "creating": "Creating...",
+    "createDefaults": "Create default types",
+    "entry": "Entry",
+    "exit": "Exit",
+    "both": "Both",
+    "requiresSupplier": "Requires supplier",
+    "requiresSupplierNit": "Requires supplier NIT",
+    "requiresRequester": "Requires requester",
+    "requiresUnit": "Requires requesting unit",
+    "requiresPdf": "Requires PDF",
+    "usedWarning": "Code and movement cannot be changed because this type is already used.",
+    "errors": {
+      "load": "Could not load document types.",
+      "create": "Could not create document type."
+    }
   }
 }

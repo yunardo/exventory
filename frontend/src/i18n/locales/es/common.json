@@ -47,5 +47,34 @@
     "logout": "Cerrar sesión",
     "expandMenu": "Expandir menú",
     "collapseMenu": "Colapsar menú"
-  }
+  },
+  "documentTypes": {
+      "title": "Tipos de documento",
+      "description": "Configura tipos de documento y reglas de validación para movimientos de inventario.",
+      "newTitle": "Nuevo tipo de documento",
+      "listTitle": "Tipos de documento",
+      "code": "Código",
+      "name": "Nombre",
+      "movement": "Movimiento",
+      "rules": "Reglas",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "create": "Crear tipo de documento",
+      "creating": "Creando...",
+      "createDefaults": "Crear tipos por defecto",
+      "entry": "Ingreso",
+      "exit": "Salida",
+      "both": "Ambos",
+      "requiresSupplier": "Requiere proveedor",
+      "requiresSupplierNit": "Requiere NIT",
+      "requiresRequester": "Requiere solicitante",
+      "requiresUnit": "Requiere unidad solicitante",
+      "requiresPdf": "Requiere PDF",
+      "usedWarning": "El código y el movimiento no se pueden cambiar porque este tipo ya está en uso.",
+      "errors": {
+        "load": "No se pudieron cargar los tipos de documento.",
+        "create": "No se pudo crear el tipo de documento.",
+        "empty": "No se encontraron tipos de documento."
+      }
+    }
 }

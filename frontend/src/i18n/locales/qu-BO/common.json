@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "Exventory",
+    "description": "Examine S.R.L. nisqamanta SaaS inventario kamachiy"
+  },
+  "common": {
+    "loading": "Cargakuchkan...",
+    "save": "Waqaychay",
+    "cancel": "Mana munani",
+    "edit": "Allichay",
+    "delete": "Qichuy",
+    "create": "Ruway",
+    "confirm": "Takyachiy",
+    "back": "Kutiy",
+    "actions": "Ruraykuna",
+    "status": "Kaynin",
+    "total": "Llapan"
+  },
+  "sidebar": {
+    "overview": "Rikch'ay",
+    "inventory": "Inventario",
+    "catalog": "Catálogo",
+    "financial": "Qullqi kamachiy",
+    "settings": "Churaykuna",
+    "dashboard": "Panel principal",
+    "currentStock": "Kunan kaq stock",
+    "stockMovements": "Stock kuyukuyninkuna",
+    "entryDocuments": "Yaykuy qillqakuna",
+    "exitDocuments": "Lluqsiy qillqakuna",
+    "stockTransfers": "Stock apachiykuna",
+    "inventoryAdjustments": "Inventario allichaykuna",
+    "kardex": "Kardex",
+    "inventoryValuation": "Inventario chaninchay",
+    "warehouses": "Qullqay wasikuna",
+    "items": "Imakuna",
+    "ufvRates": "UFV chaninkuna",
+    "ufvRevaluation": "UFV musuq chaninchay",
+    "ufvRuns": "UFV purichiykuna",
+    "tenantUsers": "Apanaq ruwaqkuna",
+    "invitations": "Waqyasqakuna",
+    "companySettings": "Empresa churaykuna",
+    "documentTypes": "Qillqa laya",
+    "auditLogs": "Auditoría qillqakuna"
+  },
+  "layout": {
+    "changeWorkspace": "Llamk'ana tikray",
+    "logout": "Lluqsiy",
+    "expandMenu": "Menú kichariy",
+    "collapseMenu": "Menú wichq'ay"
+  }
+}

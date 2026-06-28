@@ -210,8 +210,9 @@ export function DashboardLayout() {
               onChange={(event) => i18n.changeLanguage(event.target.value)}
               className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
             >
-              <option value="es">ES</option>
-              <option value="en">EN</option>
+              <option value="es">Español</option>
+              <option value="en">English</option>
+              <option value="qu-BO">Quechua</option>
             </select>
 
             <button
