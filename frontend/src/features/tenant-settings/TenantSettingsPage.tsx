@@ -27,6 +27,7 @@ export function TenantSettingsPage() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { isDirty },
   } = useForm<UpdateTenantSettingsPayload>({
     defaultValues: {
@@ -39,6 +40,13 @@ export function TenantSettingsPage() {
       timezone: "America/La_Paz",
     },
   });
+
+  const documentNumberFormat = watch("document_number_format");
+
+  const documentNumberPreview = (documentNumberFormat || "{code}-{year}-{number}")
+    .replace("{code}", "FAC")
+    .replace("{year}", "2026")
+    .replace("{number}", "000001");
 
   const {
     data: settings,
@@ -59,6 +67,7 @@ export function TenantSettingsPage() {
         address: settings.address,
         currency_code: settings.currency_code,
         timezone: settings.timezone,
+        document_number_format: settings.document_number_format,
       });
     }
   }, [settings, reset]);
@@ -78,6 +87,7 @@ export function TenantSettingsPage() {
         address: data.address,
         currency_code: data.currency_code,
         timezone: data.timezone,
+        document_number_format: data.document_number_format,
       });
 
       setLogoFile(null);
@@ -183,6 +193,26 @@ export function TenantSettingsPage() {
                 <div className="md:col-span-2">
                   <label className="text-sm font-medium">Address</label>
                   <Input {...register("address")} />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Document Number Format</label>
+                  <Input
+                    placeholder="{code}-{year}-{number}"
+                    {...register("document_number_format")}
+                  />
+                  
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Available tokens: {"{code}"}, {"{year}"}, {"{number}"}. Example: FAC-2026-000001
+                  </p>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Available tokens: {"{code}"}, {"{year}"}, {"{number}"}.
+                  </p>
+
+                  <p className="mt-1 text-xs font-medium">
+                    Preview: {documentNumberPreview}
+                  </p>
                 </div>
               </div>
 

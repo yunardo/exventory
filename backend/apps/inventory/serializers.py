@@ -926,6 +926,8 @@ class StockExitDocumentSerializer(serializers.ModelSerializer):
 
 
 class DocumentTypeSerializer(serializers.ModelSerializer):
+    is_used = serializers.SerializerMethodField()
+
     class Meta:
         model = DocumentType
         fields = [
@@ -939,4 +941,38 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
             "requires_requesting_unit",
             "requires_pdf",
             "is_active",
+            "is_used",
         ]
+    
+    def validate(self, attrs):
+        instance = getattr(self, "instance", None)
+
+        if instance:
+            is_used = (
+                instance.entry_documents.exists()
+                or instance.exit_documents.exists()
+            )
+
+            if is_used:
+                if "code" in attrs and attrs["code"] != instance.code:
+                    raise serializers.ValidationError({
+                        "code": "Code cannot be changed because this document type is already used."
+                    })
+
+                if (
+                    "movement_type" in attrs
+                    and attrs["movement_type"] != instance.movement_type
+                ):
+                    raise serializers.ValidationError({
+                        "movement_type": "Movement type cannot be changed because this document type is already used."
+                    })
+
+        return attrs
+
+        return attrs
+    
+    def get_is_used(self, obj):
+        return (
+            obj.entry_documents.exists()
+            or obj.exit_documents.exists()
+        )

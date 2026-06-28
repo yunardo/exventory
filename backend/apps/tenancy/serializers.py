@@ -88,9 +88,30 @@ class TenantSettingsSerializer(serializers.ModelSerializer):
             "currency_code",
             "timezone",
             "is_active",
+            "document_number_format",
         ]
         read_only_fields = [
             "id",
             "slug",
             "is_active",
         ]
+    
+    def validate_document_number_format(self, value):
+        allowed_tokens = {
+            "code": "TEST",
+            "year": 2026,
+            "number": "000001",
+        }
+
+        try:
+            value.format(**allowed_tokens)
+        except KeyError as exc:
+            raise serializers.ValidationError(
+                f"Invalid token: {exc}. Allowed tokens are: code, year, number."
+            )
+        except Exception:
+            raise serializers.ValidationError(
+                "Invalid document number format."
+            )
+
+        return value

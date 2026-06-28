@@ -107,20 +107,6 @@ export function DocumentTypesPage() {
     createMutation.mutate(values);
   }
 
-  function toggleActive(documentType: DocumentType) {
-    updateMutation.mutate({
-      id: documentType.id,
-      is_active: !documentType.is_active,
-    });
-  }
-
-  function toggleRequiresPdf(documentType: DocumentType) {
-    updateMutation.mutate({
-      id: documentType.id,
-      requires_pdf: !documentType.requires_pdf,
-    });
-  }
-
   function startEdit(documentType: DocumentType) {
     setEditingId(documentType.id);
     setEditValues({
@@ -312,12 +298,18 @@ export function DocumentTypesPage() {
                         {isEditing ? (
                           <Input
                             value={editValues.code ?? ""}
+                            disabled={documentType.is_used}
                             onChange={(e) =>
                               setEditValues((v) => ({ ...v, code: e.target.value }))
                             }
                           />
                         ) : (
                           <span className="font-medium">{documentType.code}</span>
+                        )}
+                        {documentType.is_used && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Code and movement cannot be changed because this type is already used.
+                          </p>
                         )}
                       </TableCell>
 
@@ -338,6 +330,7 @@ export function DocumentTypesPage() {
                         {isEditing ? (
                           <select
                             value={editValues.movement_type ?? "entry"}
+                            disabled={documentType.is_used}
                             onChange={(e) =>
                               setEditValues((v) => ({
                                 ...v,

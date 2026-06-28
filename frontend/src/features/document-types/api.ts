@@ -17,6 +17,7 @@ export type DocumentType = {
   requires_requesting_unit: boolean;
   requires_pdf: boolean;
   is_active: boolean;
+  is_used: boolean;
 };
 
 export type CreateDocumentTypePayload = Omit<DocumentType, "id">;

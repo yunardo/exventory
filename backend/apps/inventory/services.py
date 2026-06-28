@@ -19,4 +19,10 @@ def generate_document_number(*, tenant, code, date):
     sequence.last_number += 1
     sequence.save(update_fields=["last_number"])
 
-    return f"{code}-{date.year}-{sequence.last_number:06d}"
+    number = f"{sequence.last_number:06d}"
+
+    return tenant.document_number_format.format(
+        code=code,
+        year=date.year,
+        number=number,
+    )

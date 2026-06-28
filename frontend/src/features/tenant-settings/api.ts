@@ -12,6 +12,7 @@ export type TenantSettings = {
   currency_code: string;
   timezone: string;
   is_active: boolean;
+  document_number_format: string;
 };
 
 export type UpdateTenantSettingsPayload = {
@@ -22,6 +23,7 @@ export type UpdateTenantSettingsPayload = {
   address?: string;
   currency_code?: string;
   timezone?: string;
+  document_number_format?: string;
 };
 
 export async function getTenantSettings() {

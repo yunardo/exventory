@@ -21,6 +21,10 @@ class Tenant(models.Model):
         blank=True,
         null=True,
     )
+    document_number_format = models.CharField(
+        max_length=100,
+        default="{code}-{year}-{number}",
+    )
 
     def save(self, *args, **kwargs):
         if not self.slug:
