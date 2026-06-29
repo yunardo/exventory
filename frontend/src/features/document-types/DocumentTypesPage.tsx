@@ -313,7 +313,7 @@ export function DocumentTypesPage() {
                         )}
                         {documentType.is_used && (
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Code and movement cannot be changed because this type is already used.
+                            {t("documentTypes.usedWarning")}
                           </p>
                         )}
                       </TableCell>
@@ -349,7 +349,9 @@ export function DocumentTypesPage() {
                             <option value="both">{t("documentTypes.both")}</option>
                           </select>
                         ) : (
-                          documentType.movement_type
+                          documentType.movement_type === "entry" ?
+                            t("documentTypes.entry") : documentType.movement_type === "exit" ?
+                              t("documentTypes.exit") : t("documentTypes.both")
                         )}
                       </TableCell>
 
@@ -357,12 +359,12 @@ export function DocumentTypesPage() {
                         {isEditing ? (
                           <div className="grid gap-2 text-sm">
                             {[
-                              ["requires_supplier", "Supplier"],
-                              ["requires_supplier_tax_id", "NIT"],
-                              ["requires_requester", "Requester"],
-                              ["requires_requesting_unit", "Unit"],
-                              ["requires_pdf", "PDF"],
-                              ["is_active", "Active"],
+                              ["requires_supplier", t("documentTypes.supplier")],
+                              ["requires_supplier_tax_id", t("documentTypes.supplierNit")],
+                              ["requires_requester", t("documentTypes.requester")],
+                              ["requires_requesting_unit", t("documentTypes.unit")],
+                              ["requires_pdf", t("common.pdf")],
+                              ["is_active", t("documentTypes.active")],
                             ].map(([key, label]) => (
                               <label key={key} className="flex items-center gap-2">
                                 <input
@@ -383,11 +385,11 @@ export function DocumentTypesPage() {
                           </div>
                         ) : (
                           [
-                            documentType.requires_supplier ? "Supplier" : null,
-                            documentType.requires_supplier_tax_id ? "NIT" : null,
-                            documentType.requires_requester ? "Requester" : null,
-                            documentType.requires_requesting_unit ? "Unit" : null,
-                            documentType.requires_pdf ? "PDF" : null,
+                            documentType.requires_supplier ? t("documentTypes.supplier") : null,
+                            documentType.requires_supplier_tax_id ? t("documentTypes.supplierNit") : null,
+                            documentType.requires_requester ? t("documentTypes.requester") : null,
+                            documentType.requires_requesting_unit ? t("documentTypes.unit") : null,
+                            documentType.requires_pdf ? t("common.pdf") : null,
                           ]
                             .filter(Boolean)
                             .join(", ") || "-"
@@ -395,7 +397,7 @@ export function DocumentTypesPage() {
                       </TableCell>
 
                       <TableCell>
-                        {documentType.is_active ? "Active" : "Inactive"}
+                        {documentType.is_active ? t("documentTypes.active") : t("documentTypes.inactive")}
                       </TableCell>
 
                       <TableCell className="text-right">
@@ -407,11 +409,11 @@ export function DocumentTypesPage() {
                                 disabled={updateMutation.isPending}
                                 onClick={() => saveEdit(documentType.id)}
                               >
-                                Save
+                                {t("common.save")}
                               </Button>
 
                               <Button size="sm" variant="outline" onClick={cancelEdit}>
-                                Cancel
+                                {t("common.cancel")}
                               </Button>
                             </>
                           ) : (
@@ -420,7 +422,7 @@ export function DocumentTypesPage() {
                               variant="outline"
                               onClick={() => startEdit(documentType)}
                             >
-                              Edit
+                              {t("common.edit")}
                             </Button>
                           )}
                         </div>

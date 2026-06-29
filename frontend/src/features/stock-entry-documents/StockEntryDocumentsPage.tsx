@@ -32,6 +32,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDocumentTypes } from "../document-types/api";
+import { useTranslation } from "react-i18next";
 
 export function StockEntryDocumentsPage() {
   const { tenantSlug } = useTenant();
@@ -43,6 +44,7 @@ export function StockEntryDocumentsPage() {
   const [documentNumberFilter, setDocumentNumberFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const { t } = useTranslation();
 
   const { data: documentTypes = [] } = useQuery({
     queryKey: ["document-types", tenantSlug, "entry"],
@@ -201,7 +203,7 @@ export function StockEntryDocumentsPage() {
     }
 
     if (selectedDocumentType?.requires_pdf && !documentPdf) {
-      alert("This document type requires a PDF attachment.");
+      alert(t("stockDocuments.requiresPDFAttachment"));
       return;
     }
 
@@ -225,16 +227,16 @@ export function StockEntryDocumentsPage() {
     <section className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">
-          Stock Entry Documents
+          {t("stockDocuments.entryTitle")}
         </h2>
         <p className="text-muted-foreground">
-          Register multi-item stock entries from suppliers.
+          {t("stockDocuments.entryDescription")}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>New Entry Document</CardTitle>
+          <CardTitle>{t("stockDocuments.newEntry")}</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -244,11 +246,11 @@ export function StockEntryDocumentsPage() {
                 <select
                   {...register("document_type_ref", {
                     valueAsNumber: true,
-                    required: "Document type is required",
+                    required: t("stockDocuments.requiresDocumentType"),
                   })}
                   className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value={0}>Document type</option>
+                  <option value={0}>{t("stockDocuments.documentType")}</option>
                   {documentTypes.map((type) => (
                     <option key={type.id} value={type.id}>
                       {type.code} - {type.name}
@@ -257,7 +259,7 @@ export function StockEntryDocumentsPage() {
                 </select>
                 {selectedDocumentType?.requires_pdf && (
                   <p className="text-sm text-amber-600">
-                    This document type requires a PDF attachment.
+                    {t("stockDocuments.requiresPDFAttachment")}
                   </p>
                 )}
               </div>
@@ -268,10 +270,10 @@ export function StockEntryDocumentsPage() {
 
               <div>
                 <Input
-                  placeholder="Supplier name"
+                  placeholder={t("stockDocuments.supplier")}
                   {...register("supplier_name", {
                     required: selectedDocumentType?.requires_supplier
-                      ? "Supplier name is required"
+                      ? t("stockDocuments.requiresSupplier")
                       : false,
                   })}
                 />
@@ -284,25 +286,25 @@ export function StockEntryDocumentsPage() {
 
               <div>
                 <Input
-                  placeholder="Supplier NIT"
+                  placeholder={t("stockDocuments.supplierNit")}
                   {...register("supplier_tax_id", {
                     required: selectedDocumentType?.requires_supplier_tax_id
-                      ? "Supplier NIT is required"
+                      ? t("stockDocuments.requiresSupplierNIT")
                       : false,
                   })}
                 />
               </div>
 
               <div>
-                <Input placeholder="Reason" {...register("reason")} />
+                <Input placeholder={t("stockDocuments.reason")} {...register("reason")} />
               </div>
 
               <div className="md:col-span-3">
-                <Input placeholder="Notes" {...register("notes")} />
+                <Input placeholder={t("stockDocuments.notes")} {...register("notes")} />
               </div>
 
               <div className="md:col-span-3">
-                <label className="text-sm font-medium">Document PDF</label>
+                <label className="text-sm font-medium">{t("stockDocuments.documentPdf")}</label>
                 <input
                   type="file"
                   accept="application/pdf"
@@ -316,7 +318,7 @@ export function StockEntryDocumentsPage() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Items</h3>
+                <h3 className="font-semibold">{t("stockDocuments.items")}</h3>
 
                 <Button
                   type="button"
@@ -331,7 +333,7 @@ export function StockEntryDocumentsPage() {
                     })
                   }
                 >
-                  Add item
+                  {t("stockDocuments.addItem")}
                 </Button>
               </div>
 
@@ -347,7 +349,7 @@ export function StockEntryDocumentsPage() {
                       })}
                       className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      <option value={0}>Warehouse</option>
+                      <option value={0}>{t("stockDocuments.warehouse")}</option>
                       {warehouses.map((warehouse) => (
                         <option key={warehouse.id} value={warehouse.id}>
                           {warehouse.name}
@@ -361,7 +363,7 @@ export function StockEntryDocumentsPage() {
                       })}
                       className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      <option value={0}>Item</option>
+                      <option value={0}>{t("stockDocuments.item")}</option>
                       {items.map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.code} - {item.name}
@@ -370,21 +372,21 @@ export function StockEntryDocumentsPage() {
                     </select>
 
                     <Input
-                      placeholder="Quantity"
+                      placeholder={t("stockDocuments.quantity")}
                       {...register(`lines.${index}.quantity`, {
                         required: true,
                       })}
                     />
 
                     <Input
-                      placeholder="Unit cost"
+                      placeholder={t("stockDocuments.unitCost")}
                       {...register(`lines.${index}.unit_cost`, {
                         required: true,
                       })}
                     />
 
                     <Input
-                      placeholder="Notes"
+                      placeholder={t("stockDocuments.notes")}
                       {...register(`lines.${index}.notes`)}
                     />
 
@@ -394,7 +396,7 @@ export function StockEntryDocumentsPage() {
                       disabled={fields.length === 1}
                       onClick={() => remove(index)}
                     >
-                      Remove
+                      {t("stockDocuments.remove")}
                     </Button>
                   </div>
                 ))}
@@ -402,12 +404,12 @@ export function StockEntryDocumentsPage() {
             </div>
 
             <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating..." : "Create Draft"}
+              {createMutation.isPending ? t("stockDocuments.creating") : t("stockDocuments.createDraft")}
             </Button>
 
             {createMutation.isError && (
               <p className="text-sm text-red-600">
-                Could not create stock entry document.
+                {t("stockDocuments.errors.createEntry")}
               </p>
             )}
           </form>
@@ -416,7 +418,7 @@ export function StockEntryDocumentsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Entry Documents</CardTitle>
+          <CardTitle>{t("stockDocuments.entryTitle")}</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -427,20 +429,20 @@ export function StockEntryDocumentsPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="">All statuses</option>
-              <option value="draft">Draft</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">{t("stockDocuments.allStatuses")}</option>
+              <option value="draft">{t("stockDocuments.draft")}</option>
+              <option value="confirmed">{t("stockDocuments.confirmed")}</option>
+              <option value="cancelled">{t("stockDocuments.cancelled")}</option>
             </select>
 
             <Input
-              placeholder="Supplier"
+              placeholder={t("stockDocuments.supplier")}
               value={supplierFilter}
               onChange={(e) => setSupplierFilter(e.target.value)}
             />
 
             <Input
-              placeholder="Document number"
+              placeholder={t("stockDocuments.documentNumber")}
               value={documentNumberFilter}
               onChange={(e) => setDocumentNumberFilter(e.target.value)}
             />
@@ -458,30 +460,30 @@ export function StockEntryDocumentsPage() {
             />
           </div>
 
-          {isLoading && <p className="text-muted-foreground">Loading...</p>}
+          {isLoading && <p className="text-muted-foreground">{t("common.loading")}</p>}
 
           {isError && (
             <p className="text-sm text-red-600">
-              Could not load stock entry documents.
+              {t("stockDocuments.errors.loadEntry")}
             </p>
           )}
 
           {!isLoading && !isError && documents.length === 0 && (
-            <p className="text-muted-foreground">No documents found.</p>
+            <p className="text-muted-foreground">{t("stockDocuments.errors.NoDocuments")}</p>
           )}
 
           {!isLoading && !isError && documents.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Lines</TableHead>
-                  <TableHead>PDF</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("stockDocuments.date")}</TableHead>
+                  <TableHead>{t("stockDocuments.document")}</TableHead>
+                  <TableHead>{t("stockDocuments.supplier")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead className="text-right">{t("common.total")}</TableHead>
+                  <TableHead className="text-right">{t("stockDocuments.lines")}</TableHead>
+                  <TableHead>{t("common.pdf")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -513,7 +515,7 @@ export function StockEntryDocumentsPage() {
                           disabled={!document.document_pdf}
                           onClick={() => openStockEntryDocumentPdf(document.id)}
                         >
-                          View PDF
+                          {t("stockDocuments.viewPdf")}
                         </Button>
                       ) : (
                         "-"
@@ -526,7 +528,7 @@ export function StockEntryDocumentsPage() {
                           variant="outline"
                           onClick={() => navigate(`/stock-entry-documents/${document.id}`)}
                         >
-                          View
+                          {t("common.view")}
                         </Button>
                         {document.status === "draft" && (
                           <Button
@@ -535,7 +537,7 @@ export function StockEntryDocumentsPage() {
                             disabled={confirmMutation.isPending}
                             onClick={() => confirmMutation.mutate(document.id)}
                           >
-                            Confirm
+                            {t("common.confirm")}
                           </Button>
                         )}
 
@@ -546,7 +548,7 @@ export function StockEntryDocumentsPage() {
                             disabled={cancelMutation.isPending}
                             onClick={() => handleCancel(document.id)}
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </Button>
                         )}
                       </div>
